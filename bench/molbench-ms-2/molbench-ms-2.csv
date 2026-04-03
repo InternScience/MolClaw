@@ -1,0 +1,297 @@
+﻿question,answer,target
+"You are a computational medicinal chemist. For the target Phosphodiesterase 5A, you are given two small molecules:
+
+Molecule A: COc1ccc(-c2cnc(N3Cc4c(nc5ccccc5c4O)C3c3ccc4c(c3)CCO4)nc2)cc1OC
+Molecule B: COc1ccc(-c2cnc(N3Cc4c(nc5ccccc5c4O)C3c3ccc(OC)c(OC)c3)nc2)cc1OC
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",COc1ccc(-c2cnc(N3Cc4c(nc5ccccc5c4O)C3c3ccc(OC)c(OC)c3)nc2)cc1OC,Phosphodiesterase 5A
+"You are a computational medicinal chemist. For the target Angiotensin-converting enzyme, you are given two small molecules:
+
+Molecule A: CCCC[C@H](S)C(=O)N[C@@H](Cc1ccc(-c2ccccc2)cc1)C(=O)O
+Molecule B: CC(C)(S)C(=O)N[C@@H](Cc1ccc(-c2ccccc2)cc1)C(=O)O
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CCCC[C@H](S)C(=O)N[C@@H](Cc1ccc(-c2ccccc2)cc1)C(=O)O,Angiotensin-converting enzyme
+"You are a computational medicinal chemist. For the target Serotonin 1d (5-HT1d) receptor, you are given two small molecules:
+
+Molecule A: Cc1ccc2c(OCCN3CCN(Cc4ccc(F)c([N+](=O)[O-])c4)CC3)cccc2n1
+Molecule B: Cc1ccc2c(OCCN3CCN(Cc4ccc(Cl)c(Cl)c4)CC3)cccc2n1
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",Cc1ccc2c(OCCN3CCN(Cc4ccc(F)c([N+](=O)[O-])c4)CC3)cccc2n1,Serotonin 1d (5-HT1d) receptor
+"You are a computational medicinal chemist. For the target Cyclooxygenase-2, you are given two small molecules:
+
+Molecule A: COC(=O)[C@H](Cc1c[nH]c2ccccc12)NC(=O)CNC(=O)C(=O)c1cn(S(=O)(=O)c2ccc(C)cc2)c2ccccc12
+Molecule B: Cc1ccc(S(=O)(=O)n2cc(C(=O)C(=O)NCC(=O)N[C@@H](Cc3c[nH]c4ccccc34)C(=O)O)c3ccccc32)cc1
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",COC(=O)[C@H](Cc1c[nH]c2ccccc12)NC(=O)CNC(=O)C(=O)c1cn(S(=O)(=O)c2ccc(C)cc2)c2ccccc12,Cyclooxygenase-2
+"You are a computational medicinal chemist. For the target Serotonin 3a (5-HT3a) receptor, you are given two small molecules:
+
+Molecule A: CN1CCN(c2nc3ccccc3nc2O)CC1
+Molecule B: CN1CCN(c2nc3ccccc3nc2Cl)CC1
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CN1CCN(c2nc3ccccc3nc2Cl)CC1,Serotonin 3a (5-HT3a) receptor
+"You are a computational medicinal chemist. For the target Coagulation factor IX, you are given two small molecules:
+
+Molecule A: CC(Oc1cccc(-c2ccc3sc(C(=N)N)cc3c2)c1)c1ccc(F)cc1
+Molecule B: COC(=O)C(Oc1cccc(-c2ccc3sc(C(=N)N)cc3c2)c1)c1ccc(F)cc1
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",COC(=O)C(Oc1cccc(-c2ccc3sc(C(=N)N)cc3c2)c1)c1ccc(F)cc1,Coagulation factor IX
+"You are a computational medicinal chemist. For the target Aminopeptidase N, you are given two small molecules:
+
+Molecule A: CC[C@H](C)[C@H](NC(=O)[C@H](CNC(=O)[C@@H](N)C(C)C)Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1cnc[nH]1)C(=O)N1CCC[C@H]1C(=O)N[C@@H](Cc1ccccc1)C(=O)O
+Molecule B: CCCC[C@H](N)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@H](C(=O)N[C@@H](Cc1cnc[nH]1)C(=O)N1CCC[C@H]1C(=O)N[C@@H](Cc1ccccc1)C(=O)O)[C@@H](C)CC
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CC[C@H](C)[C@H](NC(=O)[C@H](CNC(=O)[C@@H](N)C(C)C)Cc1ccc(O)cc1)C(=O)N[C@@H](Cc1cnc[nH]1)C(=O)N1CCC[C@H]1C(=O)N[C@@H](Cc1ccccc1)C(=O)O,Aminopeptidase N
+"You are a computational medicinal chemist. For the target Adenosine A3 receptor, you are given two small molecules:
+
+Molecule A: Cn1cc2c(nc(NCCc3ccccc3)n3nc(-c4ccco4)nc23)n1
+Molecule B: C[C@H](Nc1nc2nn(C)cc2c2nc(-c3ccco3)nn12)c1ccccc1
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",C[C@H](Nc1nc2nn(C)cc2c2nc(-c3ccco3)nn12)c1ccccc1,Adenosine A3 receptor
+"You are a computational medicinal chemist. For the target Metabotropic glutamate receptor 3, you are given two small molecules:
+
+Molecule A: N[C@@]1(C(=O)O)C[C@H](NC(=O)c2cccc(Cl)c2)[C@H]2[C@H](C(=O)O)[C@H]21
+Molecule B: CC(=O)N[C@H]1C[C@@](N)(C(=O)O)[C@@H]2[C@@H](C(=O)O)[C@H]12
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",N[C@@]1(C(=O)O)C[C@H](NC(=O)c2cccc(Cl)c2)[C@H]2[C@H](C(=O)O)[C@H]21,Metabotropic glutamate receptor 3
+"You are a computational medicinal chemist. For the target Fibroblast growth factor receptor 1, you are given two small molecules:
+
+Molecule A: CN(c1cccc(N)c1)c1ccc2c(/C=C/c3ccccc3)n[nH]c2c1
+Molecule B: CC(=O)Nc1cccc(N(C)c2ccc3c(/C=C/c4ccccc4)n[nH]c3c2)c1
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CN(c1cccc(N)c1)c1ccc2c(/C=C/c3ccccc3)n[nH]c2c1,Fibroblast growth factor receptor 1
+"You are a computational medicinal chemist. For the target Oligopeptide transporter small intestine isoform, you are given two small molecules:
+
+Molecule A: C[C@H](NC(=O)[C@@H](N)Cc1ccc(-c2ccccc2)cc1)C(=O)O
+Molecule B: C[C@H](NC(=O)[C@@H](N)Cc1ccc(Oc2ccccc2)cc1)C(=O)O
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",C[C@H](NC(=O)[C@@H](N)Cc1ccc(-c2ccccc2)cc1)C(=O)O,Oligopeptide transporter small intestine isoform
+"You are a computational medicinal chemist. For the target Interleukin-8 receptor B, you are given two small molecules:
+
+Molecule A: CC(C)C[C@H](CO)Nc1nc(SCc2ccncc2)nc2nc(N)sc12
+Molecule B: CC(C)C[C@H](CO)Nc1nc(SCc2ccccn2)nc2nc(N)sc12
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CC(C)C[C@H](CO)Nc1nc(SCc2ccncc2)nc2nc(N)sc12,Interleukin-8 receptor B
+"You are a computational medicinal chemist. For the target Neurokinin 3 receptor, you are given two small molecules:
+
+Molecule A: C[C@@H]1c2nnc(-c3ccccn3)n2CCN1C(=O)c1ccc(F)cc1
+Molecule B: C[C@@H]1c2nnc(-c3nc(C(F)(F)F)ns3)n2CCN1C(=O)c1ccc(F)cc1
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",C[C@@H]1c2nnc(-c3nc(C(F)(F)F)ns3)n2CCN1C(=O)c1ccc(F)cc1,Neurokinin 3 receptor
+"You are a computational medicinal chemist. For the target Furin, you are given two small molecules:
+
+Molecule A: N=C(N)NCCC[C@H](NC(=O)Cc1ccccc1)C(=O)N[C@@H](CNC(=N)N)C(=O)N[C@@H](CCCNC(=N)N)C(=O)NCc1ccc(C(=N)N)cc1
+Molecule B: N=C(N)NCCC[C@H](NC(=O)Cc1ccccc1)C(=O)N[C@@H](CCC(=O)O)C(=O)N[C@@H](CCCNC(=N)N)C(=O)NCc1ccc(C(=N)N)cc1
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",N=C(N)NCCC[C@H](NC(=O)Cc1ccccc1)C(=O)N[C@@H](CNC(=N)N)C(=O)N[C@@H](CCCNC(=N)N)C(=O)NCc1ccc(C(=N)N)cc1,Furin
+"You are a computational medicinal chemist. For the target C-C chemokine receptor type 2, you are given two small molecules:
+
+Molecule A: Nc1nc2[nH]c(C3CC3)c(Cc3cccc(Cl)c3)c(=O)n2n1
+Molecule B: CCCCCCCc1[nH]c2nc(N)nn2c(=O)c1Cc1cccc(Cl)c1
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",Nc1nc2[nH]c(C3CC3)c(Cc3cccc(Cl)c3)c(=O)n2n1,C-C chemokine receptor type 2
+"You are a computational medicinal chemist. For the target Histone deacetylase 9, you are given two small molecules:
+
+Molecule A: CN1CCC(CNC(=O)c2cccc(-c3noc(C(F)(F)F)n3)c2)(c2nc(-c3ccccc3)cs2)CC1
+Molecule B: CN1CCC(CNC(=O)c2cccc(C(=O)NO)c2)(c2nc(-c3ccccc3)cs2)CC1
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CN1CCC(CNC(=O)c2cccc(C(=O)NO)c2)(c2nc(-c3ccccc3)cs2)CC1,Histone deacetylase 9
+"You are a computational medicinal chemist. For the target Subtilisin/kexin type 6, you are given two small molecules:
+
+Molecule A: CC(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CC(=O)O)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@H](C(=O)N[C@@H](CCCCN)C(=O)NCc1ccc(C(=N)N)cc1)C(C)C
+Molecule B: CC(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@H](C(=O)N[C@@H](CCCCN)C(=O)NCc1ccc(C(=N)N)cc1)C(C)C
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CC(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CC(=O)O)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCCNC(=N)N)C(=O)N[C@H](C(=O)N[C@@H](CCCCN)C(=O)NCc1ccc(C(=N)N)cc1)C(C)C,Subtilisin/kexin type 6
+"You are a computational medicinal chemist. For the target Protein kinase C theta, you are given two small molecules:
+
+Molecule A: CCC(C)(C#N)c1cccc(-c2ccnc3[nH]ncc23)c1
+Molecule B: C#CCC(C)(CN)c1cccc(-c2ccnc3[nH]ncc23)c1
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",C#CCC(C)(CN)c1cccc(-c2ccnc3[nH]ncc23)c1,Protein kinase C theta
+"You are a computational medicinal chemist. For the target Adenosylhomocysteinase, you are given two small molecules:
+
+Molecule A: Nc1ncnc2c1ncn2C1O[C@H](C(=O)OCCCl)[C@@H](O)[C@H]1O
+Molecule B: Nc1ncnc2c1ncn2C1O[C@H]([C@H]2CS2)[C@@H](O)[C@H]1O
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",Nc1ncnc2c1ncn2C1O[C@H](C(=O)OCCCl)[C@@H](O)[C@H]1O,Adenosylhomocysteinase
+"You are a computational medicinal chemist. For the target Carbonic anhydrase IX, you are given two small molecules:
+
+Molecule A: CC(C)[Se]c1ccc(S(N)(=O)=O)cc1
+Molecule B: C#CCNc1ccc(S(N)(=O)=O)cc1
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CC(C)[Se]c1ccc(S(N)(=O)=O)cc1,Carbonic anhydrase IX
+"You are a computational medicinal chemist. For the target Serine/threonine-protein kinase PAK 2, you are given two small molecules:
+
+Molecule A: CCc1cccn(-c2ccc(-c3cc4cnc(NC)nc4n(C[C@H]4CNCCO4)c3=O)c(Cl)c2)c1=O
+Molecule B: CNc1ncc2cc(-c3ccc(-n4ccc(C)cc4=O)cc3Cl)c(=O)n(C[C@H]3CNCCO3)c2n1
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CNc1ncc2cc(-c3ccc(-n4ccc(C)cc4=O)cc3Cl)c(=O)n(C[C@H]3CNCCO3)c2n1,Serine/threonine-protein kinase PAK 2
+"You are a computational medicinal chemist. For the target Mitogen-activated protein kinase kinase kinase 14, you are given two small molecules:
+
+Molecule A: CCOc1nc2ccc(C#C[C@@](C)(O)c3ncc(C)o3)cc2n1-c1ccnc(N)n1
+Molecule B: CCOc1nc2ccc(C#C[C@](C)(O)c3ncc(C)o3)cc2n1-c1ccnc(N)n1
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CCOc1nc2ccc(C#C[C@](C)(O)c3ncc(C)o3)cc2n1-c1ccnc(N)n1,Mitogen-activated protein kinase kinase kinase 14
+"You are a computational medicinal chemist. For the target Bromodomain-containing protein 4, you are given two small molecules:
+
+Molecule A: COc1cc2c(cc1-c1c(C)noc1C)[nH]c1ncnc(-c3cnoc3)c12
+Molecule B: COc1cc2c(cc1-c1c(C)noc1C)[nH]c1ncnc(-c3c(C4CC4)n[nH]c3C)c12
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",COc1cc2c(cc1-c1c(C)noc1C)[nH]c1ncnc(-c3c(C4CC4)n[nH]c3C)c12,Bromodomain-containing protein 4
+"You are a computational medicinal chemist. For the target Telomeric repeat-binding factor 2, you are given two small molecules:
+
+Molecule A: CC(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](CC(C)C)C(=O)N[C@H](C(=O)N[C@H](C(=O)N1CCC[C@H]1C(=O)N[C@H](C(N)=O)C(C)C)[C@@H](C)O)C(C)C
+Molecule B: CC(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](CC(C)C)C(=O)N[C@H](C(=O)N[C@H](C(=O)N1CCC[C@H]1C(=O)N[C@H](C(N)=O)C(C)C)[C@@H](C)O)C1CCCC1
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CC(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](C)C(=O)N[C@@H](CC(C)C)C(=O)N[C@@H](CCCCN)C(=O)N[C@@H](Cc1ccc(O)cc1)C(=O)N[C@@H](CC(C)C)C(=O)N[C@H](C(=O)N[C@H](C(=O)N1CCC[C@H]1C(=O)N[C@H](C(N)=O)C(C)C)[C@@H](C)O)C1CCCC1,Telomeric repeat-binding factor 2
+"You are a computational medicinal chemist. For the target Protein kinase C theta, you are given two small molecules:
+
+Molecule A: CC(C)(C#N)c1cccc(-c2ccnc3[nH]ncc23)c1
+Molecule B: C#CCC(C)(CN)c1cccc(-c2ccnc3[nH]ncc23)c1
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CC(C)(C#N)c1cccc(-c2ccnc3[nH]ncc23)c1,Protein kinase C theta
+"You are a computational medicinal chemist. For the target Adenosylhomocysteinase, you are given two small molecules:
+
+Molecule A: C#C/C=C/[C@H]1OC(n2cnc3c(N)ncnc32)[C@H](O)[C@@H]1O
+Molecule B: Nc1ncnc2c1ncn2C1O[C@H](/C=C/C#CI)[C@@H](O)[C@H]1O
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",C#C/C=C/[C@H]1OC(n2cnc3c(N)ncnc32)[C@H](O)[C@@H]1O,Adenosylhomocysteinase
+"You are a computational medicinal chemist. For the target Carbonic anhydrase IX, you are given two small molecules:
+
+Molecule A: COc1ccc(NC(=O)c2ccc3c(c2)C(=O)N(CCc2ccc(S(N)(=O)=O)cc2)C3=O)c(C(=O)O)c1
+Molecule B: CCOC(=O)c1ccc(N2C(=O)c3ccc(C(=O)Nc4ccc(OC)cc4C(=O)O)cc3C2=O)cc1
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",COc1ccc(NC(=O)c2ccc3c(c2)C(=O)N(CCc2ccc(S(N)(=O)=O)cc2)C3=O)c(C(=O)O)c1,Carbonic anhydrase IX
+"You are a computational medicinal chemist. For the target Mitogen-activated protein kinase kinase kinase 14, you are given two small molecules:
+
+Molecule A: CN(C)C(=O)c1c(C(N)=O)nc2n1CCOc1cc(F)c(C#CC(C)(C)O)cc1-2
+Molecule B: Cn1nccc1Cc1c(C(N)=O)nc2n1CCOc1cc(F)c(C#CC(C)(C)O)cc1-2
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CN(C)C(=O)c1c(C(N)=O)nc2n1CCOc1cc(F)c(C#CC(C)(C)O)cc1-2,Mitogen-activated protein kinase kinase kinase 14
+"You are a computational medicinal chemist. For the target Thymidylate synthase, you are given two small molecules:
+
+Molecule A: CN(C)c1cccc2c(S(=O)(=O)N[C@@H](Cc3ccc(OS(=O)(=O)c4cccc5c(N(C)C)cccc45)cc3)C(=O)O)cccc12
+Molecule B: CN(C)c1cccc2c(S(=O)(=O)Oc3ccc(C[C@H](NS(=O)(=O)c4cccc5c(NC(=O)OCc6ccccc6)cccc45)C(=O)O)cc3)cccc12
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CN(C)c1cccc2c(S(=O)(=O)N[C@@H](Cc3ccc(OS(=O)(=O)c4cccc5c(N(C)C)cccc45)cc3)C(=O)O)cccc12,Thymidylate synthase
+"You are a computational medicinal chemist. For the target Arachidonate 5-lipoxygenase, you are given two small molecules:
+
+Molecule A: Cc1ccc(S(=O)(=O)n2cc(C(=O)C(=O)N[C@H](Cc3cnc[nH]3)C(=O)O)c3ccccc32)cc1
+Molecule B: COC(=O)CNC(=O)C(=O)c1cn(S(=O)(=O)c2ccc(C)cc2)c2ccccc12
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",Cc1ccc(S(=O)(=O)n2cc(C(=O)C(=O)N[C@H](Cc3cnc[nH]3)C(=O)O)c3ccccc32)cc1,Arachidonate 5-lipoxygenase
+"You are a computational medicinal chemist. For the target Monoamine oxidase B, you are given two small molecules:
+
+Molecule A: COc1cc(C2=NN(C(=S)Nc3ccccc3)C(c3ccccc3)C2)ccc1O
+Molecule B: COc1cc(C2=NN(C(=S)Nc3ccccc3)C(c3ccc(Cl)cc3)C2)ccc1O
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",COc1cc(C2=NN(C(=S)Nc3ccccc3)C(c3ccccc3)C2)ccc1O,Monoamine oxidase B
+"You are a computational medicinal chemist. For the target Serotonin transporter, you are given two small molecules:
+
+Molecule A: COCCOc1cc(CC2CCN(CCc3ccc4c(c3)C(=O)CCO4)CC2)ccc1I
+Molecule B: COCCOc1cc(CC2CCN(CCc3ccc4c(c3)C(=O)CCO4)CC2)ccc1C(C)C
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",COCCOc1cc(CC2CCN(CCc3ccc4c(c3)C(=O)CCO4)CC2)ccc1I,Serotonin transporter
+"You are a computational medicinal chemist. For the target Vasopressin V1a receptor, you are given two small molecules:
+
+Molecule A: Cc1ccn(-c2ccc(C(=O)N3CCC(F)(F)/C(=C\C(=O)O)c4ccccc43)c(Cl)c2)n1
+Molecule B: Cc1ccn(-c2ccc(C(=O)N3CCC(F)(F)/C(=C\C(=O)NCC(N)=O)c4ccccc43)c(Cl)c2)n1
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",Cc1ccn(-c2ccc(C(=O)N3CCC(F)(F)/C(=C\C(=O)NCC(N)=O)c4ccccc43)c(Cl)c2)n1,Vasopressin V1a receptor
+"You are a computational medicinal chemist. For the target Dihydroorotate dehydrogenase, you are given two small molecules:
+
+Molecule A: C/C(O)=C(\C#N)C(=O)Nc1ccc(-c2ccccc2Cl)cc1C(F)(F)F
+Molecule B: C/C(O)=C(\C#N)C(=O)Nc1ccc(-c2cccc(Cl)c2)cc1C(F)(F)F
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",C/C(O)=C(\C#N)C(=O)Nc1ccc(-c2ccccc2Cl)cc1C(F)(F)F,Dihydroorotate dehydrogenase
+"You are a computational medicinal chemist. For the target Beta-3 adrenergic receptor, you are given two small molecules:
+
+Molecule A: CCc1cc(OCC(O)CNC2CCN(c3ncnc4scc(-c5ccccc5)c34)CC2)ccc1O
+Molecule B: Oc1ccc(OCC(O)CNC2CCN(c3ncnc4scc(-c5ccccc5)c34)CC2)cc1O
+
+Predict which molecule is more likely to have higher binding affinity (lower Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CCc1cc(OCC(O)CNC2CCN(c3ncnc4scc(-c5ccccc5)c34)CC2)ccc1O,Beta-3 adrenergic receptor
+"You are a computational medicinal chemist. For the target Cannabinoid CB2 receptor, you are given two small molecules:
+
+Molecule A: CC(C)(NC(=O)c1cc2c(n(CC3CCCCC3)c1=O)CCCCCC2)C(=O)NCC(=O)O
+Molecule B: CC(C)(NC(=O)c1cc2c(n(CC3CCCCC3)c1=O)CCCCCC2)C(=O)NNS(C)(=O)=O
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",CC(C)(NC(=O)c1cc2c(n(CC3CCCCC3)c1=O)CCCCCC2)C(=O)NCC(=O)O,Cannabinoid CB2 receptor
+"You are a computational medicinal chemist. For the target Bradykinin B2 receptor, you are given two small molecules:
+
+Molecule A: Cc1ccc2cccc(OCc3c(Cl)ccc(S(=O)(=O)NC(C)(C)C(=O)N4CCNCC4)c3Cl)c2n1
+Molecule B: Cc1ccc2cccc(OCc3c(Cl)ccc(S(=O)(=O)NC(C)(C)C(=O)Nc4ccccc4)c3Cl)c2n1
+
+Predict which molecule is more likely to have lower binding affinity (higher Ki) against the target.
+Use available evidence and tool outputs to make a justified decision whenever possible.
+Only output the corresponding SMILES.",Cc1ccc2cccc(OCc3c(Cl)ccc(S(=O)(=O)NC(C)(C)C(=O)Nc4ccccc4)c3Cl)c2n1,Bradykinin B2 receptor

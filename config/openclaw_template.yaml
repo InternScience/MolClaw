@@ -1,0 +1,16 @@
+bench:
+  enabled: true
+  dataset: "molbench-ms-1"
+  data_path: "bench/molbench-ms-1/molbench-ms-1.csv"
+  model_name: "openclaw"
+  tasks: ["rdkit_bench"]
+  max_process: 1
+
+model:
+  llm_model: "gpt-4o"
+
+settings:
+  seed: 42
+  loop_count: 1
+  max_iter: 15
+  enable_manual_input: 0

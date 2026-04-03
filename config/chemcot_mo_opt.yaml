@@ -1,0 +1,17 @@
+bench:
+  enabled: true
+  dataset: "ChemCoTBench"
+  data_path: "bench/molbench-mo"
+  eval_root: "bench/ChemCoTBench/baseline_and_eval"
+  model_name: "pure-llm"
+  tasks: ["molbench-mo-opt"]
+  max_process: 1
+
+model:
+  llm_model: "gpt-4o"
+
+settings:
+  seed: 42
+  loop_count: 1
+  max_iter: 15
+  enable_manual_input: 0

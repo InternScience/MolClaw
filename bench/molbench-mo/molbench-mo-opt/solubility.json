@@ -1,0 +1,66 @@
+[
+    {
+        "id": "eff4cb68-8caf-4b75-a9ee-80f1847a0f74",
+        "query": "You are a chemical assistent, Optimize the Source Molecule to improve the compound's ability to dissolve in water (Solubility) while following a structured intermediate optimization process. \nYour response must be directly parsable JSON format:\n{\n    \"Final Target Molecule\": \"SMILES\",\n}\n\nSource Molecule: COc1ccc(NC(=O)Nc2nnc(N3CCCC3)s2)cc1.",
+        "gt": "",
+        "task": "mol_opt_physchem",
+        "subtask": "solubility",
+        "meta": "{\"src_iupac\": \"1-(4-methoxyphenyl)-3-(5-pyrrolidin-1-yl-1,3,4-thiadiazol-2-yl)urea\", \"type\": \"small\"}"
+    },
+    {
+        "id": "977eee29-ccd0-4db2-bf98-1388e39856b9",
+        "query": "You are a chemical assistent, Optimize the Source Molecule to improve the compound's ability to dissolve in water (Solubility) while following a structured intermediate optimization process. \nYour response must be directly parsable JSON format:\n{\n    \"Final Target Molecule\": \"SMILES\",\n}\n\nSource Molecule: NC1=NC2(c3ccc(F)cc3F)COC(c3ccc(Cl)cc3)CC2CS1.",
+        "gt": "",
+        "task": "mol_opt_physchem",
+        "subtask": "solubility",
+        "meta": "{\"src_iupac\": null, \"type\": \"middle\"}"
+    },
+    {
+        "id": "015d5f0a-31e0-48fb-aeec-e9d0c5aa6359",
+        "query": "You are a chemical assistent, Optimize the Source Molecule to improve the compound's ability to dissolve in water (Solubility) while following a structured intermediate optimization process. \nYour response must be directly parsable JSON format:\n{\n    \"Final Target Molecule\": \"SMILES\",\n}\n\nSource Molecule: CC(C(=O)NCc1ccc(C(F)(F)F)nc1SC1CCCCC1)c1ccc(NS(C)(=O)=O)c(F)c1.",
+        "gt": "",
+        "task": "mol_opt_physchem",
+        "subtask": "solubility",
+        "meta": "{\"src_iupac\": \"N-[[2-cyclohexylsulfanyl-6-(trifluoromethyl)pyridin-3-yl]methyl]-2-[3-fluoro-4-(methanesulfonamido)phenyl]propanamide\", \"type\": \"large\"}"
+    },
+    {
+        "id": "958378e3-d16a-424b-b0fe-91bf794be7e8",
+        "query": "You are a chemical assistent, Optimize the Source Molecule to improve the compound's ability to dissolve in water (Solubility) while following a structured intermediate optimization process. \nYour response must be directly parsable JSON format:\n{\n    \"Final Target Molecule\": \"SMILES\",\n}\n\nSource Molecule: CC(C)(C)NC(=O)C(c1ccsc1)N(C(=O)Cn1nnc2ccccc21)c1ccc(C(C)(C)C)cc1.",
+        "gt": "",
+        "task": "mol_opt_physchem",
+        "subtask": "solubility",
+        "meta": "{\"src_iupac\": \"2-(N-[2-(benzotriazol-1-yl)acetyl]-4-tert-butylanilino)-N-tert-butyl-2-thiophen-3-ylacetamide\", \"type\": \"large\"}"
+    },
+    {
+        "id": "9c544dcd-113e-4dcf-a285-fdf11c987713",
+        "query": "You are a chemical assistent, Optimize the Source Molecule to improve the compound's ability to dissolve in water (Solubility) while following a structured intermediate optimization process. \nYour response must be directly parsable JSON format:\n{\n    \"Final Target Molecule\": \"SMILES\",\n}\n\nSource Molecule: Cc1c(Sc2cccc(Cl)c2)n(COCCO)c(=O)[nH]c1=O.",
+        "gt": "",
+        "task": "mol_opt_physchem",
+        "subtask": "solubility",
+        "meta": "{\"src_iupac\": \"6-(3-chlorophenyl)sulfanyl-1-(2-hydroxyethoxymethyl)-5-methylpyrimidine-2,4-dione\", \"type\": \"small\"}"
+    },
+    {
+        "id": "6d18e57d-9642-4c50-a311-0ae2a568f55c",
+        "query": "You are a chemical assistent, Optimize the Source Molecule to improve the compound's ability to dissolve in water (Solubility) while following a structured intermediate optimization process. \nYour response must be directly parsable JSON format:\n{\n    \"Final Target Molecule\": \"SMILES\",\n}\n\nSource Molecule: N#Cc1ncc(F)c(N(Cc2ccc(Cl)cc2)Cc2ccc3c(c2)OCO3)n1.",
+        "gt": "",
+        "task": "mol_opt_physchem",
+        "subtask": "solubility",
+        "meta": "{\"src_iupac\": \"4-[1,3-benzodioxol-5-ylmethyl-[(4-chlorophenyl)methyl]amino]-5-fluoropyrimidine-2-carbonitrile\", \"type\": \"middle\"}"
+    },
+    {
+        "id": "c2ed310b-b0ee-4c6f-98ec-1b4398332947",
+        "query": "You are a chemical assistent, Optimize the Source Molecule to improve the compound's ability to dissolve in water (Solubility) while following a structured intermediate optimization process. \nYour response must be directly parsable JSON format:\n{\n    \"Final Target Molecule\": \"SMILES\",\n}\n\nSource Molecule: COc1ccc(C(=O)NO)cc1NC(=O)c1ccccc1Cl.",
+        "gt": "",
+        "task": "mol_opt_physchem",
+        "subtask": "solubility",
+        "meta": "{\"src_iupac\": \"3-[(2-chlorobenzoyl)amino]-N-hydroxy-4-methoxybenzamide\", \"type\": \"small\"}"
+    },
+    {
+        "id": "b8227f1a-8ac8-4294-a728-fdd925fe1456",
+        "query": "You are a chemical assistent, Optimize the Source Molecule to improve the compound's ability to dissolve in water (Solubility) while following a structured intermediate optimization process. \nYour response must be directly parsable JSON format:\n{\n    \"Final Target Molecule\": \"SMILES\",\n}\n\nSource Molecule: CCOC(=O)C(C#N)=Cc1ccc(OCC(=O)Nc2ccc(C)cc2C)c(OC)c1.",
+        "gt": "",
+        "task": "mol_opt_physchem",
+        "subtask": "solubility",
+        "meta": "{\"src_iupac\": \"ethyl 2-cyano-3-[4-[2-(2,4-dimethylanilino)-2-oxoethoxy]-3-methoxyphenyl]prop-2-enoate\", \"type\": \"large\"}"
+    }
+]

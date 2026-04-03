@@ -1,0 +1,74 @@
+[
+    {
+        "id": "a5d30563-b05b-47ec-9ee2-365e262c6385",
+        "query": "You are a chemical assistent. Given the SMILES structural formula of a molecule, help me DELETE a specified functional group and output the modified SMILES sequence of the molecule. Input: Molecule SMILES string, Functional Group Name. Output: Modified Molecule SMILES string.\nYour response must be directly parsable JSON format:\n{\n    \"output\": \"Modified Molecule SMILES\"\n}\nInput Molecule: COC(=O)c1ccc(NC(=O)C2CCN(C(=O)O)CC2)cc1, Functional Group to delete: carboxyl.",
+        "gt": "",
+        "task": "mol_edit",
+        "subtask": "delete",
+        "meta": "{\"reference\": \"COC(=O)c1ccc(NC(=O)C2CCNCC2)cc1\", \"removed_group\": \"carboxyl\"}"
+    },
+    {
+        "id": "87c8bd10-83e0-4e35-a897-f76bb6830778",
+        "query": "You are a chemical assistent. Given the SMILES structural formula of a molecule, help me DELETE a specified functional group and output the modified SMILES sequence of the molecule. Input: Molecule SMILES string, Functional Group Name. Output: Modified Molecule SMILES string.\nYour response must be directly parsable JSON format:\n{\n    \"output\": \"Modified Molecule SMILES\"\n}\nInput Molecule: CCSCCOC(=O)/C=C/c1cccc(C#N)c1, Functional Group to delete: nitrile.",
+        "gt": "",
+        "task": "mol_edit",
+        "subtask": "delete",
+        "meta": "{\"reference\": \"CCSCCOC(=O)/C=C/c1ccccc1\", \"removed_group\": \"nitrile\"}"
+    },
+    {
+        "id": "7d20e385-9130-4f24-b4c9-be940ac2aad9",
+        "query": "You are a chemical assistent. Given the SMILES structural formula of a molecule, help me DELETE a specified functional group and output the modified SMILES sequence of the molecule. Input: Molecule SMILES string, Functional Group Name. Output: Modified Molecule SMILES string.\nYour response must be directly parsable JSON format:\n{\n    \"output\": \"Modified Molecule SMILES\"\n}\nInput Molecule: O=C(NCCC(=O)N1CCN(S(=O)(=O)c2ccc(Cl)cc2)CC1)Nc1ccccc1, Functional Group to delete: halo.",
+        "gt": "",
+        "task": "mol_edit",
+        "subtask": "delete",
+        "meta": "{\"reference\": \"O=C(NCCC(=O)N1CCN(S(=O)(=O)c2ccccc2)CC1)Nc1ccccc1\", \"removed_group\": \"halo\"}"
+    },
+    {
+        "id": "ee2afe52-70ea-4ec3-8775-a4e3e2ea403e",
+        "query": "You are a chemical assistent. Given the SMILES structural formula of a molecule, help me DELETE a specified functional group and output the modified SMILES sequence of the molecule. Input: Molecule SMILES string, Functional Group Name. Output: Modified Molecule SMILES string.\nYour response must be directly parsable JSON format:\n{\n    \"output\": \"Modified Molecule SMILES\"\n}\nInput Molecule: CC(=O)Nc1ccc(C[NH+]2CCC(C3CCOCC3)CC2)cc1, Functional Group to delete: benzene_ring.",
+        "gt": "",
+        "task": "mol_edit",
+        "subtask": "delete",
+        "meta": "{\"reference\": \"CC(=O)N.C[NH+]1CCC(C2CCOCC2)CC1\", \"removed_group\": \"benzene_ring\"}"
+    },
+    {
+        "id": "c719e288-e1f6-4cdb-b1f6-a5317a9ee3a6",
+        "query": "You are a chemical assistent. Given the SMILES structural formula of a molecule, help me DELETE a specified functional group and output the modified SMILES sequence of the molecule. Input: Molecule SMILES string, Functional Group Name. Output: Modified Molecule SMILES string.\nYour response must be directly parsable JSON format:\n{\n    \"output\": \"Modified Molecule SMILES\"\n}\nInput Molecule: O=C(CC1(n2cccc2)CCCCC1)NCCO, Functional Group to delete: hydroxyl.",
+        "gt": "",
+        "task": "mol_edit",
+        "subtask": "delete",
+        "meta": "{\"reference\": \"O=C(CC1(n2cccc2)CCCCC1)NCC\", \"removed_group\": \"hydroxyl\"}"
+    },
+    {
+        "id": "66294e3a-0fdf-4c2e-ba61-ab89a42e958c",
+        "query": "You are a chemical assistent. Given the SMILES structural formula of a molecule, help me DELETE a specified functional group and output the modified SMILES sequence of the molecule. Input: Molecule SMILES string, Functional Group Name. Output: Modified Molecule SMILES string.\nYour response must be directly parsable JSON format:\n{\n    \"output\": \"Modified Molecule SMILES\"\n}\nInput Molecule: Nc1cc2[nH]c(=O)[nH]c2cc1S(=O)(=O)[O-], Functional Group to delete: amine.",
+        "gt": "",
+        "task": "mol_edit",
+        "subtask": "delete",
+        "meta": "{\"reference\": \"c1cc2[nH]c(=O)[nH]c2cc1S(=O)(=O)[O-]\", \"removed_group\": \"amine\"}"
+    },
+    {
+        "id": "995df23b-259d-4560-9785-582bedc9c5aa",
+        "query": "You are a chemical assistent. Given the SMILES structural formula of a molecule, help me DELETE a specified functional group and output the modified SMILES sequence of the molecule. Input: Molecule SMILES string, Functional Group Name. Output: Modified Molecule SMILES string.\nYour response must be directly parsable JSON format:\n{\n    \"output\": \"Modified Molecule SMILES\"\n}\nInput Molecule: CCN(Cc1ccccn1)c1ccc(C=O)o1, Functional Group to delete: aldehyde.",
+        "gt": "",
+        "task": "mol_edit",
+        "subtask": "delete",
+        "meta": "{\"reference\": \"CCN(Cc1ccccn1)c1ccco1\", \"removed_group\": \"aldehyde\"}"
+    },
+    {
+        "id": "3dae1844-adf1-4b19-b4d5-5a1585794efc",
+        "query": "You are a chemical assistent. Given the SMILES structural formula of a molecule, help me DELETE a specified functional group and output the modified SMILES sequence of the molecule. Input: Molecule SMILES string, Functional Group Name. Output: Modified Molecule SMILES string.\nYour response must be directly parsable JSON format:\n{\n    \"output\": \"Modified Molecule SMILES\"\n}\nInput Molecule: Cc1ccc(O[C@@H](C)C(=O)NC(N)=O)c(C=O)n1, Functional Group to delete: aldehyde.",
+        "gt": "",
+        "task": "mol_edit",
+        "subtask": "delete",
+        "meta": "{\"reference\": \"Cc1ccc(O[C@@H](C)C(=O)NC(N)=O)cn1\", \"removed_group\": \"aldehyde\"}"
+    },
+    {
+        "id": "46a38a9d-b267-40f3-982b-e3441446a0c5",
+        "query": "You are a chemical assistent. Given the SMILES structural formula of a molecule, help me DELETE a specified functional group and output the modified SMILES sequence of the molecule. Input: Molecule SMILES string, Functional Group Name. Output: Modified Molecule SMILES string.\nYour response must be directly parsable JSON format:\n{\n    \"output\": \"Modified Molecule SMILES\"\n}\nInput Molecule: O=C(Nc1ccc(Nc2ccccc2)cc1)c1ccc(O)nc1, Functional Group to delete: amine.",
+        "gt": "",
+        "task": "mol_edit",
+        "subtask": "delete",
+        "meta": "{\"reference\": \"O=C(Nc1ccccc1)c1ccc(O)nc1\", \"removed_group\": \"amine\"}"
+    }
+]
