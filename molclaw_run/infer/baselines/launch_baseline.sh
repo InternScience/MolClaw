@@ -75,4 +75,4 @@ if [ "$run_step1" = 1 ]; then
 fi
 
 [ -z "$results_dir" ] && { echo "Error: results_dir empty. Set run_step1=1 or set results_dir in script."; exit 1; }
-python molclaw_run/evaluate/run_eval_bench.py "$results_dir" --cfg "$CFG_FILE"
+python molbench/eval/run_eval_bench.py "$results_dir" --cfg "$CFG_FILE"

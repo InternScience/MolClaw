@@ -1,8 +1,8 @@
 bench:
   enabled: true
   dataset: "ChemCoTBench"
-  data_path: "bench/molbench-mo"
-  eval_root: "bench/ChemCoTBench/baseline_and_eval"
+  data_path: "molbench/data/molbench-mo"
+  eval_root: "molbench/eval/ChemCoTBench/baseline_and_eval"
   model_name: "pure-llm"
   tasks: ["molbench-mo-edit"]
   max_process: 1

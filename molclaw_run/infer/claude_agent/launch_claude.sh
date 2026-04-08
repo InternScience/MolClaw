@@ -107,4 +107,4 @@ if [ -z "$captured" ]; then
 fi
 results_dir="$captured"
 
-python "$LLM_BENCH_DIR/evaluate/run_eval_bench.py" "$results_dir" --cfg "$CFG_FILE"
+python "$WORKSPACE_DIR/molbench/eval/run_eval_bench.py" "$results_dir" --cfg "$CFG_FILE"

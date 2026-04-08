@@ -1,7 +1,7 @@
 bench:
   enabled: true
   dataset: "molbench-ms-1"
-  data_path: "bench/molbench-ms-1/molbench-ms-1.csv"
+  data_path: "molbench/data/molbench-ms-1/molbench-ms-1.csv"
   model_name: "pure-llm"
   tasks: ["rdkit_bench"]
   max_process: 1

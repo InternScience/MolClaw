@@ -1,7 +1,7 @@
 bench:
   enabled: true
   dataset: "molbench-ms-2"
-  data_path: "bench/molbench-ms-2/molbench-ms-2.csv"
+  data_path: "molbench/data/molbench-ms-2/molbench-ms-2.csv"
   model_name: "pure-llm"
   tasks: ["acnet_curated"]
   max_process: 1

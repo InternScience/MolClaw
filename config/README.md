@@ -9,23 +9,18 @@ This directory keeps only minimal runnable examples.
 - baseline_molbench-ms-3.yaml: pure LLM on molbench-ms-3
 - chemcot_mo_edit.yaml: pure LLM on molbench-mo-edit
 - chemcot_mo_opt.yaml: pure LLM on molbench-mo-opt
-- biomni_template.yaml: Biomni runner template
 - claude_template.yaml: Claude Code runner template
-- openclaw_template.yaml: OpenClaw runner template
-- nanobot_template.yaml: Nanobot runner template
 
 ## Credential Policy
 
 Do not put base_url/api_key in YAML examples.
 
-Use environment variables from ../.env.template:
+Use environment variables:
 - OPENAI_API_KEY
 - OPENAI_BASE_URL
-- NANOBOT_MCP_URL
-- NANOBOT_MCP_API_KEY
 
 ## Why this layout
 
 - One config per benchmark for direct reproducibility.
-- One template per agent type for quick adaptation.
+- One template for Claude Code for quick adaptation.
 - No internal endpoints or secret-bearing fields.

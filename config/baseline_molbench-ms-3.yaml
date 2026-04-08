@@ -1,7 +1,7 @@
 bench:
   enabled: true
   dataset: "molbench-ms-3"
-  data_path: "bench/molbench-ms-3/molbench-ms-3.csv"
+  data_path: "molbench/data/molbench-ms-3/molbench-ms-3.csv"
   model_name: "pure-llm"
   tasks: ["molbench_vs"]
   max_process: 1
