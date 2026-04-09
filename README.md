@@ -10,9 +10,10 @@
 
 **A reproducible pathway for autonomous molecular evaluation, screening, and optimization.**
 
+> ✨ If MolClaw helps your research or engineering workflow, we'd really appreciate a star.
+
 </div>
 
-> ✨ If MolClaw helps your research or engineering workflow, we'd really appreciate a star.
 ---
 
 ## 📖 Overview
