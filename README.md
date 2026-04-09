@@ -6,7 +6,7 @@
 
 [![bioRxiv](https://img.shields.io/badge/bioRxiv-10.64898%2F2026.04.03.716272v1-b31b1b?style=flat-square)](https://www.biorxiv.org/content/10.64898/2026.04.03.716272v1)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](./LICENSE)
-[![Python 3.12](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square)](https://www.python.org/downloads/)
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?style=flat-square)](https://www.python.org/downloads/)
 
 **A reproducible pathway for autonomous molecular evaluation, screening, and optimization.**
 
