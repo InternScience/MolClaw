@@ -56,18 +56,6 @@ The tool supports three mapping strategies in priority order:
 
 ## Usage
 
-This skill relies on the MCP environment.
-
-```python
-## Connect MCP server
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-if not await client.connect():
-    print("connection failed")
-    return
-
-## When finished
-await client.disconnect()
-```
 
 ### Tool: `residue_mapper`
 

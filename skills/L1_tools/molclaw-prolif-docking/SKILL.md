@@ -24,20 +24,6 @@ Batch-analyze multiple docking-generated binding poses and produce interaction f
 | `template_smiles` | Required when `ligand_format` is `pdbqt` to provide ligand chemistry reference |
 
 ## Usage
-This skill relies on the MCP environment. If it is not installed, please run `pip install mcp`.
-
-The **initialization** and **shutdown** of the MCP server are shown below:
-
-```python
-## When start, connect the MCP server
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-if not await client.connect():
-    print("connection failed")
-    return
-
-## When finish, disconnect the MCP server
-await client.disconnect()
-```
 
 ### Tool: `prolif_docking`
 

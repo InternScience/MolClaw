@@ -1,118 +1,160 @@
-# MolClaw
+<a id="top"></a>
 
-MolClaw 是一个面向分子任务的基准评测与技能驱动执行框架，旨在统一地测试不同模型在分子编辑、性质优化与虚拟筛选等任务上的表现。
+# <img src="assets/molclaw_logo.png" alt="MolClaw Logo" width="42" /> MolClaw: An Autonomous Agent with Hierarchical Skills for Drug Molecule Evaluation, Screening, and Optimization
 
-- 论文（bioRxiv）：https://www.biorxiv.org/content/10.64898/2026.04.03.716272v1
+<div align="center">
 
-## 项目结构
+[![bioRxiv](https://img.shields.io/badge/bioRxiv-10.64898%2F2026.04.03.716272v1-b31b1b?style=flat-square)](https://www.biorxiv.org/content/10.64898/2026.04.03.716272v1)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](./LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square)](https://www.python.org/downloads/)
 
-- `molbench/`: 基准评测数据与官方评测代码
-- `skills/`: 可复用的化学/分子相关技能（给 Claude Code 使用）
-- `molclaw_run/`: 运行器与数据加载器（baseline + Claude Code）
-- `config/`: 最小可运行配置模板
-- `utils/`: 通用工具（例如 LLM 端点与随机种子）
+**A reproducible pathway for autonomous molecular evaluation, screening, and optimization.**
 
-### molbench
+</div>
 
-`molbench` 目录下分为 `data` 与 `eval` 两部分：
+> ✨ If MolClaw helps your research or engineering workflow, we'd really appreciate a star.
+---
 
-- `molbench/data/`：
-  - `molbench-ms-1`：约束过滤任务（原 RDKit_bench）
-  - `molbench-ms-2`：结合亲和力问答（原 ACNet_curated）
-  - `molbench-ms-3`：虚拟筛选排序（原 MolBench-vs）
-  - `molbench-mo`：ChemCoTBench 任务子集（molbench-mo-edit / molbench-mo-opt）
+## 📖 Overview
 
-- `molbench/eval/`：
-  - `ChemCoTBench/`：官方评测代码与依赖
-  - `eval_runner.py` / `run_eval_bench.py`：本项目统一评测入口
+Computational drug discovery is fundamentally a **long-horizon workflow orchestration problem**: each decision depends on upstream tool outputs, scientific constraints, and strict quality verification. MolClaw is designed for this setting as a practical and reproducible framework for **molecule evaluation, screening, and optimization**.
 
-### skills
+This open-source release combines a benchmark suite, a hierarchical skill library, and runnable inference/evaluation pipelines:
 
-`skills/` 提供给 Claude Code 的可调用技能。典型使用方式是将 `skills/` 中的技能复制到当前工作目录的 `./.claude/skills/` 下，让 Claude Code 在本地推理时调用。
+- **Hierarchical skill architecture (`L1`/`L2`/`L3`)** that separates atomic tool operations, workflow composition, and methodology-level scientific governance.
+- **Model- and runtime-agnostic design philosophy**: skill definitions are intended to remain stable as backbone models and agent runtimes evolve.
+- **Unified benchmark stack (`molbench`)** covering molecular screening and molecular optimization settings under standardized evaluation protocols.
+- **Runnable execution pipelines in `molclaw_run`** for direct baseline LLM inference and Claude Code skill-driven execution.
 
-### molclaw_run
+<div align="center">
+  <img src="assets/molclaw_architecture.png" alt="MolClaw Architecture" width="920" />
+</div>
 
-`molclaw_run` 仅保留两类入口：
+---
 
-- `infer/baselines/`: 纯 LLM baseline 跑法
-- `infer/claude_agent/`: Claude Code 跑法
+## 🧪 MolBench
 
-数据加载与解析逻辑在 `molclaw_run/data_loader/` 中。
+`molbench` is a **multi-dimensional benchmark suite for drug discovery agents**, designed to evaluate not only final answers but also the reliability of structured, tool-augmented scientific workflows.
 
-## 支持的基座模型（示例）
+- **`molbench-ms-1`**: molecular property filtering.
+- **`molbench-ms-2`**: target-aware binding-affinity comparison QA.
+- **`molbench-ms-3`**: virtual-screening style ranking and hit identification.
+- **`molbench-mo`**: molecule optimization tasks, including editing and physicochemical optimization tracks.
 
-- GPT-4o
-- GPT 5.2
-- Gemini 3
-- Claude Sonnet 4.6
-- Deepseek V3.2
-- GLM 5
-- Minimax 2.5
-- Kimi 2.5
-- Intern-S1-Pro
+`molbench/eval` contains unified evaluators (`eval_runner.py`, `run_eval_bench.py`) together with ChemCoTBench-related evaluation dependencies, enabling **comparable cross-run analysis** under one consistent evaluation interface.
 
-> 具体模型名称由 `config/*.yaml` 的 `model.llm_model` 决定，并通过环境变量配置 API 端点与密钥。
+<div align="center">
+  <img src="assets/molbench_leaderboard.png" alt="MolBench Leaderboard" width="920" />
+</div>
 
-## Quickstart
+---
 
-### 1) 单条问题（Claude Code）
+## 🧰 Skills
 
-1. 复制技能到工作目录：
+`skills/` is the reusable skill library for agent execution and workflow standardization:
+
+- **`skills/L1_tools`**: tool-level operation skills (atomic actions, interface conventions, output checks).
+- **`skills/L2_workflows`**: multi-step workflow skills (task decomposition, step ordering, failure recovery).
+- **`skills/L3_methodology`**: high-level scientific methodology and governance principles.
+
+This hierarchy is built to be **modular, composable, and auditable**, so complex workflows remain maintainable as tasks, tools, and model backbones evolve.
+
+For Claude Code usage, copy skills into your task workspace:
 
 ```bash
 mkdir -p ./.claude/skills
-cp -R /Users/sunx/code_proj/MolClaw/skills/* ./.claude/skills/
+cp -R <YOUR_CLONED_MOLCLAW_DIR>/skills/* ./.claude/skills/
 ```
 
-2. 在终端启动 Claude Code：
+---
+
+## 🚀 Quick Start
+
+### 1) Clone Repository and Create Conda Environment
 
 ```bash
+git clone https://github.com/InternScience/MolClaw.git
+cd MolClaw
+conda env create -f environment.yaml
+conda activate molclaw
+```
+
+This environment is the recommended baseline for `molbench` inference and evaluation dependencies.
+
+### 2) Configure Environment
+
+```bash
+cp .env.template .env
+# edit .env and fill required keys/endpoints for your model provider
+
+# load env vars into current shell
+set -a
+source .env
+set +a
+```
+
+### 3) Claude Code Interact with Skills
+
+Copy the Skills into your Claude Code workspace and then you can interact with them in your conversations.
+
+```bash
+# in your task workspace
+mkdir -p ./.claude/skills
+cp -R <YOUR_CLONED_MOLCLAW_DIR>/skills/* ./.claude/skills/
+
 claude
+# then run /init and ask your task
 ```
 
-3. 在 Claude Code 中执行初始化：
+### 4) Benchmark Runs
 
-```
-/init
-```
-
-4. 这会生成 `CLAUDE.md`，随后即可直接提问。
-
-### 2) molbench 测试（baseline）
-
-以 `molbench-ms-1` 为例：
+Use the commands below for baseline and Claude benchmark runs; each command performs inference and automatic `molbench` evaluation.
 
 ```bash
-export OPENAI_API_KEY=YOUR_KEY
-export OPENAI_BASE_URL=YOUR_BASE_URL
+# Baseline benchmark run (direct LLM inference + auto evaluation)
+bash molclaw_run/infer/baselines/launch_baseline.sh --cfg config/baseline_molbench-ms-1.yaml
 
-python molclaw_run/infer/baselines/run_baseline.py --cfg config/baseline_molbench-ms-1.yaml
-# 输出会包含 RESULTS_DIR=... 
-
-python molbench/eval/run_eval_bench.py <RESULTS_DIR> --cfg config/baseline_molbench-ms-1.yaml
-```
-
-### 3) molbench 测试（Claude Code）
-
-```bash
-export OPENAI_API_KEY=YOUR_KEY
-export OPENAI_BASE_URL=YOUR_BASE_URL
-
+# Claude benchmark run (Claude Code workflow + auto evaluation)
 bash molclaw_run/infer/claude_agent/launch_claude.sh --cfg config/claude_template.yaml --claude-mode both
 ```
 
-### 4) ChemCoTBench（molbench-mo）评测
+You can switch datasets/tasks by replacing the config file with other templates in `config/`.
+
+### 5) Evaluate an Existing Run Directory
+
+If you have an existing run directory with generated outputs and want to evaluate it under `molbench` protocols, you can use the unified evaluation script:
 
 ```bash
-python molbench/eval/run_eval_bench.py <RESULTS_DIR> --cfg config/chemcot_mo_edit.yaml
-python molbench/eval/run_eval_bench.py <RESULTS_DIR> --cfg config/chemcot_mo_opt.yaml
+python molbench/eval/run_eval_bench.py <RESULTS_DIR> --cfg <CONFIG_PATH>
 ```
 
-## 环境变量
+---
 
-- `OPENAI_API_KEY`：模型服务密钥
-- `OPENAI_BASE_URL`：模型服务端点
+## 📄 License
 
-## License
+This project is licensed under the MIT License - see the `LICENSE` file for details.
 
-尚未指定。如果需要开源许可证，请新增 `LICENSE` 文件。
+---
+
+## 📚 Citation
+
+If you use MolClaw in your research or projects, please consider citing our paper:
+
+```bibtex
+@article{zhang2026molclaw,
+  title={MolClaw: An Autonomous Agent with Hierarchical Skills for Drug Molecule Evaluation, Screening, and Optimization},
+  author={Zhang, Lisheng and Wang, Lilong and Sun, Xiangyu and Tang, Wei and Su, Haoyang and Qian, Yuehui and Yang, Qikui and Li, Qingsong and Tang, Zhenyu and Sun, Haoran and Han, Yingnan and Jiang, Yankai and Lou, Wenjie and Zhou, Bowen and Wang, Xiaosong and Bai, Lei and Xie, Zhengwei},
+  journal={bioRxiv},
+  year={2026},
+  url={https://www.biorxiv.org/content/10.64898/2026.04.03.716272v1}
+}
+```
+---
+
+<div align="center">
+
+**Made with ❤️ by the MolClaw Team**
+
+[GitHub: InternScience/MolClaw](https://github.com/InternScience/MolClaw) • [⬆ back to top](#top)
+
+</div>

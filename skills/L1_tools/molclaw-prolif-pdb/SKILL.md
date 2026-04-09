@@ -23,20 +23,6 @@ Analyze interaction fingerprints from one static protein-ligand complex structur
 | `protein_selection` | Defaults to `protein`; can be customized to limit the analyzed region |
 
 ## Usage
-This skill relies on the MCP environment. If it is not installed, please run `pip install mcp`.
-
-The **initialization** and **shutdown** of the MCP server are shown below:
-
-```python
-## When start, connect the MCP server
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-if not await client.connect():
-    print("connection failed")
-    return
-
-## When finish, disconnect the MCP server
-await client.disconnect()
-```
 
 ### Tool: `prolif_pdb`
 

@@ -14,21 +14,6 @@ Note:
 
 ## Usage
 
-### 1. MCP Server
-This skill relies on the MCP environment. If it is not installed, please run `pip install mcp`.
-
-The **initialization** and **shutdown** of the MCP server are shown below:
-
-```python
-## When start, connect the MCP server
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-if not await client.connect():
-    print("connection failed")
-    return
-
-## When finish, disconnect the MCP server
-await client.disconnect() 
-```
 
 ### 2. Protein Sequence Design and Scoring
 The description of tool *proteinmpnn_tool*.
