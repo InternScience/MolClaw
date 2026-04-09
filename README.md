@@ -33,7 +33,7 @@ This open-source release combines a benchmark suite, a hierarchical skill librar
 
 ---
 
-## 🧪 MolBench
+## 📊 MolBench
 
 `molbench` is a **multi-dimensional benchmark suite for drug discovery agents**, designed to evaluate not only final answers but also the reliability of structured, tool-augmented scientific workflows.
 
@@ -50,7 +50,7 @@ This open-source release combines a benchmark suite, a hierarchical skill librar
 
 ---
 
-## 🧰 Skills
+## 🤖 Skills
 
 `skills/` is the reusable skill library for agent execution and workflow standardization:
 
@@ -137,7 +137,7 @@ This project is licensed under the MIT License - see the `LICENSE` file for deta
 
 ---
 
-## 📚 Citation
+## 📝 Citation
 
 If you use MolClaw in your research or projects, please consider citing our paper:
 
