@@ -89,12 +89,4 @@ if not await client.connect(server_url):
 await client.disconnect() 
 ```
 
-**Note**: For most tools, the default server endpoint (`server_url`) is `https://scp.intern-ai.org.cn/api/v1/mcp/2/DrugSDA-Tool`. However, for the specific tools listed below, the `server_url` is `http://180.184.86.2:32208/mcp`.
-
-```tex
-evobind_tool (molclaw-evobind-tool)
-gmx_mmpbsa_workflow (molclaw-protein-ligand-mmpbsa)
-gmx_mmpbsa_propro (molclaw-protein-protein-mmpbsa)
-run_openawsem_simulation (molclaw-openawsem-tool)
-pred_binding_affinity_boltz2 (molclaw-boltz2-affinity)
-```
+**Note**: For most tools, the default server endpoint (`server_url`) is `https://scp.intern-ai.org.cn/api/v1/mcp/2/DrugSDA-Tool`.
