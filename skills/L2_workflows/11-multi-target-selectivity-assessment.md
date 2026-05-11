@@ -16,7 +16,7 @@ metadata:
       L3 Principle 11 (Count-Before-Report — verify docking counts across targets),
       L3 Principle 13 (Computation-first — cross-target alignment must be computationally derived, not from LLM knowledge),
       L3 Principle 14 (Mandatory structure file collection — download docking poses for ALL targets),
-      L3 Principle 15 (Mandatory image file collection — download ProLIF comparison heatmaps),
+      L3 Principle 15 (Mandatory image file collection — download interaction analysis images per target),
       L3 Principle 17 (Residue numbering reconciliation — CRITICAL for cross-target comparison),
       L3 Principle 18 (Docking parameter safeguards — minimum 25 Å box, identical parameters across targets)
 ---
@@ -25,9 +25,11 @@ metadata:
 
 ## Applicability
 
-**Use this skill when:** The user has multiple homologous targets (e.g., CDK2/CDK4/CDK6, JAK1/JAK2/JAK3, Aurora A/B) and candidate molecules, and needs to assess selectivity.
+**Use this skill when:** The user has multiple target proteins (homologous or sharing a common binding site topology, e.g., CDK2/CDK4/CDK6, EGFR/VEGFR2, JAK1/JAK2/JAK3) and candidate molecules, and needs to assess binding across targets, optimize selectivity, or verify dual/multi-target activity.
 
-**Do NOT use this skill when:** There is only one target (use Skill 2); the targets are unrelated (not homologous); or the task is optimizing selectivity without initial docking data (start with Skill 2).
+**Do NOT use this skill when:** There is only one target (use Skill 2); the targets share no structural similarity in the binding region (e.g., a kinase and a GPCR — perform independent Skill 2 docking per target without cross-target alignment); or the task is optimizing selectivity without initial docking data (start with Skill 2).
+
+**Integration with Skill 5 Scene D:** When this skill is invoked as a sub-step within Skill 5's multi-target iterative loop, the cross-docking matrix and selectivity-determining residues feed directly into Skill 5's Step 2 (diagnosis and design). The "bottleneck target" (worst-performing target relative to its threshold) from this skill's output determines which target Skill 5 prioritizes in the next round.
 
 ## Prerequisites
 
@@ -132,24 +134,53 @@ Cross-docking verification:
 
 ### Step 5: Interaction Fingerprint Differential Analysis
 
-For each candidate molecule, run ProLIF on its docking pose in EACH target.
+For each candidate molecule, run `molclaw-interaction-visualizer` on its docking pose in EACH target:
 
-### Residue Numbering Mapping for Cross-Target ProLIF (L3 Principle 17 — CRITICAL)
+```bash
+# For Target 1
+python molclaw_interaction_visualizer.py \
+    --receptor target1_prepared.pdb --ligand candidate_target1.sdf \
+    --mode ligand --out_dir viz_target1 \
+    --resid_offset <target1_offset> --score <vina_score> \
+    --residue_roles_json target1_roles.json --title "Target1–Candidate"
 
-**This is the most error-prone step in multi-target selectivity analysis.** ProLIF reports residue IDs using the numbering of each target's PDB file. Different target PDB files almost certainly use different numbering schemes. Before comparing interaction fingerprints across targets, ALL residue IDs must be mapped to a common reference scheme (typically UniProt or the cross-target alignment table).
+# For Target 2 (same candidate, different target)
+python molclaw_interaction_visualizer.py \
+    --receptor target2_prepared.pdb --ligand candidate_target2.sdf \
+    --mode ligand --out_dir viz_target2 \
+    --resid_offset <target2_offset> --score <vina_score> \
+    --residue_roles_json target2_roles.json --title "Target2–Candidate"
+```
 
-**MAPPING GATE — Execute for EACH target's ProLIF output:**
-1. Map ProLIF residue IDs → PDB author numbering → UniProt numbering (using the per-target mapping from Step 1).
-2. Align across targets using the cross-target alignment table.
+The `--residue_roles_json` can be customized per target to highlight target-specific functional residues (e.g., different gatekeeper residues), enabling visual side-by-side comparison of interaction patterns.
+
+### Residue Numbering for Cross-Target Analysis (L3 Principle 17 — CRITICAL)
+
+**This is the most error-prone step in multi-target selectivity analysis.** Different target PDB files almost certainly use different numbering schemes. The interaction-visualizer's `--resid_offset` maps each target's PDB numbering to UniProt independently, but cross-target comparison still requires alignment.
+
+**MAPPING GATE — Execute for EACH target's output:**
+1. Set correct `--resid_offset` per target so `rec_resid_mapped` reflects UniProt numbering.
+2. Align `rec_resid_mapped` across targets using the cross-target alignment table from Step 1.
 3. Compare interactions at the SAME alignment positions across targets.
 
-CORRECT: "ProLIF detected HBond at Ala145 (Target1 Boltz-2 internal) = Ala743 UniProt. In Target2, the aligned position is Pro298 UniProt = Pro45 (Target2 Boltz-2 internal). ProLIF shows no HBond at Pro45 in Target2. This position (Ala743→Pro298) is a selectivity-determining residue."
+CORRECT: "Interaction visualizer detected HBond at Ala145 (Target1, rec_resid_mapped=743) = Ala743 UniProt. In Target2, the aligned position is Pro298 UniProt (rec_resid_mapped=298). No HBond at Pro298 in Target2. This position (Ala743→Pro298) is a selectivity-determining residue."
 
-WRONG: "ProLIF detected HBond at Ala145 in Target1 but not in Target2. This is a target-specific interaction." (Without mapping, Ala145 in Target1 and Ala145 in Target2 are NOT necessarily the same position.)
+WRONG: "Interaction visualizer detected HBond at Ala145 in Target1 but not in Target2." (Without mapping, Ala145 in Target1 and Ala145 in Target2 are NOT necessarily the same position.)
 
-### Post-ProLIF Image Download (L3 Principle 15)
+### Cross-Target Programmatic Comparison
 
-Download ALL ProLIF heatmaps for ALL targets. Download any comparison/overlay images.
+Parse `summary_*.json` from each target and compare:
+- `top_residues` lists (after alignment-position mapping) → target-specific vs. conserved contacts
+- `interaction_type_counts` → differential interaction profiles
+- `hot_partner_sites` → ligand atoms that interact differently across targets
+
+### Post-Analysis Image Download (L3 Principle 15)
+
+Download ALL interaction-visualizer output images for ALL targets:
+- `diagram2d_*.png` — per-target 2D diagrams for side-by-side comparison
+- `residue_bar_*.png`, `pymol_*_{front,side,top}.png`
+
+**Optional supplement:** For batch fingerprint comparison across many candidates × targets simultaneously, also run `prolif_docking` and download ProLIF heatmaps.
 
 **Analysis checklist:**
 - **Target-specific interactions:** Present in desired target, ABSENT in off-targets → selectivity basis
@@ -165,7 +196,7 @@ Based on Step 5's differential analysis (grounded in tool-computed data — L3 P
 - Which modifications introduce clashes with off-target-specific residues?
 - Are there packing differences to exploit?
 
-**Computation-first rule:** Optimization recommendations must cite specific ProLIF-identified interactions and cross-target alignment positions. CORRECT: "Extending the molecule toward alignment position 523 (Thr in Target1, Lys in Target2) could exploit the size difference." WRONG: "Kinase selectivity is typically achieved through exploiting the gatekeeper residue" (generic LLM knowledge).
+**Computation-first rule:** Optimization recommendations must cite specific interaction-visualizer-identified interactions (from `summary_*.json`) and cross-target alignment positions. CORRECT: "Extending the molecule toward alignment position 523 (Thr in Target1, Lys in Target2) could exploit the size difference." WRONG: "Kinase selectivity is typically achieved through exploiting the gatekeeper residue" (generic LLM knowledge).
 
 ### Step 7: Experimental Data Comparison (if available)
 
@@ -188,7 +219,7 @@ If initial cross-docking shows no selectivity:
 |---------|-------------|----------|
 | ΔScores all near zero | Pocket sequences very conserved | Focus on allosteric sites; design larger molecules |
 | Docking fails for one target | Structure quality issue | Re-prepare; try different PDB; use predicted structure |
-| ProLIF identical across targets | Box too small; peripheral differences missed | Increase box; include 2nd-shell residues |
+| Interaction profiles identical across targets | Box too small; peripheral differences missed | Increase docking box; include 2nd-shell residues |
 | Cross-target residue comparison incorrect | Numbering mismatch | **Rebuild cross-target alignment table from scratch** |
 
 ## Quality Gates (Active Checkpoints)
@@ -205,9 +236,9 @@ If initial cross-docking shows no selectivity:
 - [ ] Failed dockings explained
 
 **CHECKPOINT after Step 5 (interaction analysis):**
-- [ ] ProLIF residue IDs mapped to common reference scheme for ALL targets
+- [ ] `rec_resid_mapped` verified against common reference scheme for ALL targets
 - [ ] Selectivity-determining residues verified against cross-target alignment
-- [ ] All ProLIF images downloaded
+- [ ] All interaction-visualizer images downloaded (per-target 2D diagrams, residue bars)
 
 **CHECKPOINT before report:**
 - [ ] No docking ΔScore converted to Kd selectivity ratio
@@ -222,8 +253,11 @@ If initial cross-docking shows no selectivity:
 | Cross-docking matrix | Table with verified scores and ΔScores | Report | **A — MUST download** |
 | Docking pose files | PDBQT per (molecule × target) | Archive, user verification | **A — MUST download** |
 | Selectivity ranking | CSV: molecule, ΔScores, consistency | Report | **A — MUST download** |
-| ProLIF comparison | Per-molecule per-target interaction fingerprints (mapped) | Report, Skill 5 | **A — MUST download** |
-| ProLIF images | PNG/SVG per target | Report | **A — MUST download** |
+| Interaction-visualizer CSV + JSON per target | Per-molecule per-target interaction data (mapped via --resid_offset) | Report, Skill 5 | **A — MUST download** |
+| Interaction-visualizer 2D diagrams per target | PNG per target per candidate (side-by-side comparison) | Report | **A — MUST download** |
+| ProLIF batch comparison (if Module 2B used) | Per-molecule cross-target fingerprint CSV | Report, Skill 5 | **A — MUST download** (if used) |
 | Cross-target alignment table | CSV: alignment_position, target1_AA, target2_AA | Skill 5, Report | **A — MUST download** |
 | Selectivity-determining residues | Table: alignment position, AA difference, interaction difference | Skill 5, Skill 4 | **A — MUST download** |
 | Optimization recommendations | Markdown citing specific tool-computed data | Skill 5, Skill 4 | B — record in log |
+| Bottleneck target ID | Text: target name with worst score relative to threshold | Skill 5 Scene D Step 2 | B — record in log |
+| Per-target modification guidance | JSON: {target: [{site, interaction_gap, recommended_change}]} | Skill 5 Scene D Step 2 | B — record in log |

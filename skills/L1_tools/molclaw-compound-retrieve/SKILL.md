@@ -8,6 +8,11 @@ metadata:
 
 # Retrieve Compound SMILES
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 The description of tool *retrieve_smiles_by_compoundname*.
 
 ```tex
@@ -34,4 +39,3 @@ response = await client.session.call_tool(
 result = client.parse_result(response)
 retrieve_smiles = result["retrieve_smiles"]
 ```
-

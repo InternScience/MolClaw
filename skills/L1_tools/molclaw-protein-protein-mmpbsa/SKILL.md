@@ -8,6 +8,11 @@ metadata:
 
 # Protein-Protein MM/PBSA Workflow (Execution-Ready)
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 This skill guides agents through the protein-protein MM/GB(PB)SA pipeline with enforced MCP handoffs, file validation, and optional analysis.
 
 ## Canonical Toolchain & References
@@ -17,7 +22,7 @@ This skill guides agents through the protein-protein MM/GB(PB)SA pipeline with e
 3. Step 3 — `gmx_mmpbsa_propro` ([reference_gmx_mmpbsa_propro.md](reference_gmx_mmpbsa_propro.md)): compute GB/PB binding energies inside the prepared workspace.
 4. Optional Step 4 — `analyze_mmpbsa` ([reference_analyze_mmpbsa.md](reference_analyze_mmpbsa.md)): aggregate the CSV/plot outputs into a final report.
 
-## MCP Tool Names (must use)
+## SCP Tool Names (must use)
 
 - `fix_pdb`
 - `prepare_protein_md`
@@ -40,39 +45,7 @@ This skill guides agents through the protein-protein MM/GB(PB)SA pipeline with e
 3. Optional analysis consumes the MM/GBSA result workspace: `gmx_mmpbsa_propro.output_dir` → `analyze_mmpbsa.work_dir`
 4. `gmx_mmpbsa_propro.output_files` (e.g., `gb_result_csv`, `pb_result_csv`) are the canonical GB/PB summaries for downstream reporting.
 
-Never request users to provide intermediate GROMACS artifacts (`em.gro`, `md.xtc`, `md.tpr`, `topol.top`); those files are generated inside the MCP-managed workspace.
-
-## Common MCP Client
-
-```python
-import json
-from mcp.client.streamable_http import streamablehttp_client
-from mcp import ClientSession
-
-class DrugSDAClient:
-    def __init__(self, server_url: str):
-        self.server_url = server_url
-        self.session = None
-
-    async def connect(self):
-        self.transport = streamablehttp_client(url=self.server_url)
-        self.read, self.write, self.get_session_id = await self.transport.__aenter__()
-        self.session_ctx = ClientSession(self.read, self.write)
-        self.session = await self.session_ctx.__aenter__()
-        await self.session.initialize()
-
-    async def disconnect(self):
-        if self.session:
-            await self.session_ctx.__aexit__(None, None, None)
-        if hasattr(self, "transport"):
-            await self.transport.__aexit__(None, None, None)
-
-    @staticmethod
-    def parse_result(result):
-        if hasattr(result, "content") and result.content and hasattr(result.content[0], "text"):
-            return json.loads(result.content[0].text)
-        return result
-```
+Never request users to provide intermediate GROMACS artifacts (`em.gro`, `md.xtc`, `md.tpr`, `topol.top`); those files are generated inside the SCP-managed workspace.
 
 ## Step-by-step Execution Details
 
@@ -130,9 +103,6 @@ class DrugSDAClient:
 ## Recommended Sequential Calling
 
 ```python
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-await client.connect()
-
 # Step 1: fix_pdb
 r1 = client.parse_result(await client.session.call_tool(
     "fix_pdb",
@@ -187,8 +157,6 @@ if enable_analysis:
             "work_dir": r3["output_dir"],
         },
     ))
-
-await client.disconnect()
 ```
 
 ## Practical Parameter Sets
@@ -214,32 +182,3 @@ await client.disconnect()
 5. If the optional analyzer fails, keep `gmx_mmpbsa_propro` results as the canonical output and append the analyzer `msg`/`missing_files` to the summary.
 6. Do not wait indefinitely for long MD stages: report progress between steps and offer a quick-profile rerun when runtime exceeds expected limits.
 7. Avoid repeated filesystem polling loops; if required files are missing after one check, fail fast and surface missing filenames.
-
-
----
-
-## ⚠ Mandatory Download of ALL MD and MMPBSA Output Files (L3 Principles 14-15)
-
-**After EACH step in the MMPBSA pipeline, download ALL output files:**
-
-| Step | Files to download | Category |
-|------|------------------|----------|
-| `fix_pdb` | Repaired PDB (`output_file`) | A — MUST |
-| `prepare_complex` | em.gro, md.xtc, md.tpr, topol.top, md.gro/md_final.gro, npt.gro | A — MUST |
-| `run_mmpbsa` | FINAL_RESULTS.csv, per-residue decomposition files, energy files | A — MUST |
-| `analyze_mmpbsa` | ALL PNG plots (energy bars, decomposition charts), CSV reports | A — MUST |
-
-Use `server_file_to_base64` for each file. Verify size > 0 after download. A pipeline step is NOT considered complete until all its output files are downloaded.
-
-**For `prepare_complex` output directory:** List ALL files in `output_dir` and download every one with a recognized extension (gro, xtc, tpr, top, edr, log, pdb, csv).
-
-## ⚠ Residue Numbering for Per-Residue Decomposition (L3 Principle 17)
-
-Per-residue energy decomposition uses the numbering of the input PDB. If the task references specific residues in a different scheme (e.g., UniProt), build a mapping table using `molclaw-residue-mapper` BEFORE interpreting which residues are energy hotspots.
-
-## ⚠ Result Plausibility (L3 Principle 9)
-
-- Protein-ligand ΔG: typically −5 to −30 kcal/mol. Positive values suggest the ligand left the pocket during MD.
-- **NEVER** convert MM-PBSA ΔG to Kd via ΔG = RT·ln(Kd). MM-PBSA is an approximation; only relative ranking is reliable.
-- If GB and PB give opposite rankings, report BOTH and note the disagreement.
-

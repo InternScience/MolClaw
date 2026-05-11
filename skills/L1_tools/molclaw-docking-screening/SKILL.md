@@ -8,6 +8,11 @@ metadata:
 
 # Large-Scale Docking Screening Skill
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 ## Name
 molclaw-docking-screening
 
@@ -86,21 +91,3 @@ Recommended default weights:
 - Use rank aggregation or z-score fusion; avoid directly summing raw scores.
 - Some of steps depend on other skills, Please refer carefully.
 - Save all intermediate scripts, and save the results (the complete Claude Code reasoning process and output for this question) as result.md.
-
----
-
-## ⚠ Docking Box Minimum (L3 Principle 18)
-
-When this skill invokes QuickVina (Stage 3), ensure all box dimensions are ≥ 25.0 Å. If pocket detection returns smaller dimensions, override to 25.0 Å. Apply progressive enlargement (25→30→40→50) on docking failure before switching methods.
-
-## ⚠ Count Verification at Every Stage (L3 Principle 11)
-
-At EVERY stage boundary (filtering → docking → rescoring → consensus), programmatically count molecules entering and leaving. Record verified counts in the screening funnel. NEVER report a count from memory or expectation.
-
-## ⚠ Mandatory File Downloads (L3 Principle 14)
-
-Download ALL docking pose files (PDBQT), EquiScore SDF files, and any generated images. These are Category A outputs essential for user verification.
-
-## ⚠ Mandatory Pose Download for All Docked Molecules
-
-After QuickVina docking, download the `docking_res_file` for EVERY successfully docked molecule using `server_file_to_base64`. After EquiScore rescoring, download generated SDF files.

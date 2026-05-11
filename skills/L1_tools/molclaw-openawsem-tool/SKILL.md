@@ -9,14 +9,13 @@ metadata:
 # OpenAWSEM Simulation and Trajectory Extraction
 
 Note: 
-- Local files are not directly accessible by the server. Please upload them to the server using `drugsda-file-transfer` before execution. 
-- For PDB file inputs, it is recommended to preprocess them using `drugsda-fix_pdb` before execution.
-
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
 
 ## Usage
 
-
-### 2. OpenAWSEM Simulation
+### 1. OpenAWSEM Simulation
 The description of tool *openawsem_sim*.
 
 ```tex
@@ -27,7 +26,7 @@ Args:
   steps (float): Simulation step count, default 1e5.
   mode (str): Temperature control mode in {annealing, nvt}, default annealing.
   temperature (float): NVT temperature in Kelvin passed to source script argument --temperature, default 300.0.
-  platform (str): OpenMM platform in {CPU, CUDA, OpenCL}, default CUDA.
+  platform (str): OpenMM platform in {CPU, CUDA, OpenCL}, default CPU.
   use_frag_mem (bool): Whether to use fragment memory instead of single memory, default False.
   compute_q (bool): Whether to enable Q-value related terms when available, default False.
   dry_run (bool): Whether to validate setup without running MD steps, default False.
@@ -95,7 +94,7 @@ simulation_dir = result["simulation_dir"]
 }
 ```
 
-### 3. OpenAWSEM Trajectory Frame Extraction
+### 2. OpenAWSEM Trajectory Frame Extraction
 The description of tool *openawsem_traj_extract*.
 
 ```tex
@@ -156,7 +155,7 @@ frame_files = result["frame_files"]
 }
 ```
 
-### 4. Simulation to Extraction Workflow
+### 3. Simulation to Extraction Workflow
 Use `openawsem_sim` first, then feed its `simulation_dir` into `openawsem_traj_extract`.
 
 ```python
@@ -191,28 +190,3 @@ frame_files = extract_result["frame_files"]
 
 await client.disconnect()
 ```
-
-
----
-
-## ⚠ Mandatory Output File Download (L3 Principle 14)
-
-**After calling this tool, you MUST download all output structure files** from the MCP server to the local workspace using `server_file_to_base64`. A tool call is NOT considered complete until its output files have been downloaded and verified locally (`ls -la <file>` — size must be > 0).
-
-```python
-import base64, os
-response = await client.session.call_tool(
-    "server_file_to_base64",
-    arguments={"file_path": result["output_file"]}  # or relevant output field
-)
-dl = client.parse_result(response)
-local_path = "stepNN_descriptive_name.ext"
-with open(local_path, "wb") as f:
-    f.write(base64.b64decode(dl["base64_string"]))
-assert os.path.getsize(local_path) > 0, f"Download failed: {local_path}"
-```
-
-**Download policy:** All structure output files are **Category A (user-critical)** — essential for user verification, downstream analysis, and reproducibility. When in doubt, download. Over-collection is always preferred over under-collection.
-
-
-**Specific files to download from OpenAWSEM output:** All trajectory PDB files, representative frame structures. These are coarse-grained and require reconstruction for downstream analysis.

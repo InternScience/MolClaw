@@ -8,6 +8,11 @@ metadata:
 
 # Molecular Basic Properties Calculation
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 The description of tool *calculate_mol_basic_info*.
 
 ```tex
@@ -41,10 +46,3 @@ response = await client.session.call_tool(
 result = client.parse_result(response)
 metrics = result["metrics"]
 ```
-
-
----
-
-## ⚠ MW/Formula Consistency Check (L3 Principle 9)
-
-After computing basic properties, **verify that the molecular weight (MW) is consistent with the molecular formula.** For example, C₁₄H₁₄O₃ cannot yield MW = 244.29 (it should be ~230.26). If MW and formula disagree, the SMILES was likely parsed incorrectly — flag the molecule, re-validate the SMILES, and recompute. Do NOT silently accept inconsistent values.

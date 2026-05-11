@@ -9,13 +9,13 @@ metadata:
 # ProteinMPNN Sequence Design
 
 Note: 
-- Local files are not directly accessible by the server. Please upload them to the server using `drugsda-file-transfer` before execution. 
-- For PDB file inputs, it is recommended to preprocess them using `drugsda-fix_pdb` before execution.
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
 
 ## Usage
 
-
-### 2. Protein Sequence Design and Scoring
+### 1. Protein Sequence Design and Scoring
 The description of tool *proteinmpnn_tool*.
 
 ```tex
@@ -92,17 +92,3 @@ key_output = result["results_dir"]
     "dry_run": False
 }
 ```
-
----
-
-## ⚠ Mandatory Design Count Verification (L3 Principle 11)
-
-After calling ProteinMPNN, **programmatically verify** the actual number of designed sequences returned. If using `num_seq_per_target=8`, verify that 8 sequences were actually produced. Report the ACTUAL count.
-
-## ⚠ Mandatory Structure Validation Download (L3 Principle 14)
-
-After ProteinMPNN design, the standard workflow requires ESMFold validation (self-consistency check). **Download ALL predicted structures** from ESMFold for designed sequences. These are Category A files.
-
-## ⚠ Cysteine Constraint Reminder (L3 Section 6.3)
-
-When the design goal does NOT involve introducing new disulfide bonds, use `omit_aas="CX"` to prevent introduction of non-native cysteines that could form problematic disulfide bonds. This is especially important in thermostability design (L2 Skill 10, Scene F).

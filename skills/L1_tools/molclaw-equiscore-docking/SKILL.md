@@ -8,6 +8,11 @@ metadata:
 
 # 1. EquiScore Docking Ranking Skill
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 step 1. Retrieve target protein structure (skip if user already provides PDB).
 - Use skill `molclaw-protein-structure-retrieve`.
 
@@ -71,7 +76,7 @@ Important:
 Two valid modes:
 - Mode A: user already provides `docking_result_sdf_path` -> use directly.
 
-- Mode B: only SMILES provided -> first generate docking poses (docked SDF) using the established quick-vina / molecule_docking_quickvina workflow (as shown in the golden pipeline CCR6 case: convert_smiles_to_format → molecule_docking_quickvina with pocket box → output docked SDF), then set docking_result_sdf_path to the resulting docked file before continuing to step6. This ensures receptor-relative poses.
+- Mode B: only SMILES provided -> first generate docking poses using the `molecule_docking_quickvina_fullprocess` tool (which accepts PDB + SMILES directly and handles all format conversions internally), then convert the output docking pose file to SDF and set docking_result_sdf_path to the resulting docked file before continuing to step6. This ensures receptor-relative poses.
 
 When converting formats, use this tool:
 
@@ -141,26 +146,3 @@ step 8. Rank and return.
 - Prefer direct CSV read from `predictions_path`.
 - If direct read fails, use `molclaw-file-transfer` (`server_file_to_base64`) to fetch CSV and parse locally.
 - Preserve `ligand_to_smiles_map`; do not assume CSV always has a `smiles` column.
-
-
----
-
-## ⚠ Mandatory Output File Download (L3 Principle 14)
-
-**After calling this tool, you MUST download all output structure files** from the MCP server to the local workspace using `server_file_to_base64`. A tool call is NOT considered complete until its output files have been downloaded and verified locally (`ls -la <file>` — size must be > 0).
-
-```python
-import base64, os
-response = await client.session.call_tool(
-    "server_file_to_base64",
-    arguments={"file_path": result["output_file"]}  # or relevant output field
-)
-dl = client.parse_result(response)
-local_path = "stepNN_descriptive_name.ext"
-with open(local_path, "wb") as f:
-    f.write(base64.b64decode(dl["base64_string"]))
-assert os.path.getsize(local_path) > 0, f"Download failed: {local_path}"
-```
-
-**Download policy:** All structure output files are **Category A (user-critical)** — essential for user verification, downstream analysis, and reproducibility. When in doubt, download. Over-collection is always preferred over under-collection.
-

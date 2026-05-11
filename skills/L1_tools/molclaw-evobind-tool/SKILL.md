@@ -9,14 +9,13 @@ metadata:
 # EvoBind2 Peptide Binder Design
 
 Note: 
-- Local files are not directly accessible by the server. Please upload them to the server using `drugsda-file-transfer` before execution. 
-- For PDB file inputs, it is recommended to preprocess them using `drugsda-fix_pdb` before execution.
-
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
 
 ## Usage
 
-
-### 2. EvoBind2 Binder Design
+### 1. EvoBind2 Binder Design
 The description of tool *evobind_tool*.
 
 ```tex
@@ -106,17 +105,3 @@ key_output = result["output_dir"]
     "skip_env_check": True
 }
 ```
-
----
-
-## ⚠ Mandatory Design Count Verification (L3 Principle 11)
-
-After calling EvoBind, **programmatically count** the actual number of designs returned. Report the ACTUAL count (not the requested `num_designs`). If actual < requested, note the discrepancy.
-
-## ⚠ Mandatory Structure File Download (L3 Principle 14)
-
-Download ALL designed peptide structure files from the output directory. These are Category A files essential for downstream Chai-1 validation and ProLIF analysis.
-
-## ⚠ ipTM is a Design Score, NOT an Independent Validation (L3 Principle 9)
-
-EvoBind's ipTM is the design tool's own scoring metric. **Independent validation with Chai-1 is mandatory** before concluding that a design is successful. See L2 Skill 09 for the full validation protocol.

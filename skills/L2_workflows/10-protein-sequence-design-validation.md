@@ -15,7 +15,7 @@ metadata:
       L3 Principle 11 (Count-Before-Report — verify design counts and validation metrics),
       L3 Principle 13 (Computation-first — stability predictions must come from tools),
       L3 Principle 14 (Mandatory structure file collection — download ESMFold predictions, Chai-1 complexes),
-      L3 Principle 15 (Mandatory image file collection — download pLDDT plots, ProLIF outputs),
+      L3 Principle 15 (Mandatory image file collection — download pLDDT plots, interaction analysis outputs),
       L3 Principle 17 (Residue numbering reconciliation — map design positions to UniProt),
       L3 Principle 20 (Honest annotation of uncertainty)
 ---
@@ -41,11 +41,11 @@ metadata:
 | Scene | Goal | Core tool | Trigger |
 |-------|------|-----------|---------| 
 | **A: Full/partial sequence redesign** | Redesign sequence for improved properties | `proteinmpnn_tool` | "design protein sequence," "redesign for stability" |
-| **B: Mutation effect prediction** | Identify beneficial mutations | `pred_mutant_sequence` (ProSST) | "predict mutation effects" |
-| **C: Interface sequence design** | Optimize one side of a protein-protein interface | `proteinmpnn_tool` + ProLIF | "optimize binding interface" |
+| **B: Mutation effect prediction** | Identify beneficial mutations | `pred_mutant_sequence` (ProSST) **[CURRENTLY UNAVAILABLE — tool not deployed on MCP server]** | "predict mutation effects" |
+| **C: Interface sequence design** | Optimize one side of a protein-protein interface | `proteinmpnn_tool` + interaction-visualizer (protein mode) | "optimize binding interface" |
 | **D: Homooligomer design** | Design symmetric multimers | `proteinmpnn_tool` `homooligomer` mode | "design symmetric dimer/trimer" |
 | **E: Sequence scoring** | Evaluate compatibility of mutations | `proteinmpnn_tool` `score_only` mode | "score these mutants" |
-| **F: Thermostability with interface preservation** | Maximize thermostability while preserving binding interfaces | `proteinmpnn_tool` + Chai-1 + ProLIF + conformational sampling | "improve stability without affecting binding," "thermostabilize while preserving interface" |
+| **F: Thermostability with interface preservation** | Maximize thermostability while preserving binding interfaces | `proteinmpnn_tool` + Chai-1 + interaction-visualizer (protein mode) + conformational sampling | "improve stability without affecting binding," "thermostabilize while preserving interface" |
 
 ## ProteinMPNN Parameter Guide
 
@@ -99,7 +99,25 @@ Partition ALL residues into three classes:
 **Free (preferred mutation targets):**
 - Surface-exposed non-interface residues
 - Loop regions distant from functional sites
-- Positions where ProSST indicates tolerance for substitution
+- Positions where FoldX PositionScan, ProSST, or literature indicates tolerance for substitution
+
+**Quantitative residue classification with FoldX AlaScan (recommended):**
+
+For energy-based evidence complementing the distance-based classification above, run FoldX AlaScan in complex mode on the wild-type structure:
+
+```python
+response = await client.session.call_tool("foldx_tool", arguments={
+    "mode": "alascan",
+    "pdb_path": foldx_repaired_complex_path,
+    "chains": "A,B"   # set to actual interface chain definition
+})
+result = client.parse_result(response)
+```
+
+Parse the output `{stem}_AS.fxout` and classify residues by ΔΔG(Ala):
+- ΔΔG(Ala) > 1.0 kcal/mol → **Fixed** (interface hotspot — critical for binding)
+- ΔΔG(Ala) 0.5–1.0 kcal/mol → **Cautious** (moderate contribution)
+- ΔΔG(Ala) < 0.5 kcal/mol → **Free** (tolerates substitution)
 
 **Residue numbering (L3 Principle 17):** Build the mapping table FIRST, then classify residues using the structure's numbering while recording the task's numbering for reference.
 
@@ -110,10 +128,11 @@ Partition ALL residues into three classes:
 **Round 1: Baseline + Initial Design**
 
 1. **Structure prediction baseline:** If no experimental structure is available, predict wild-type structure (ESMFold/Chai-1). Record pLDDT as baseline.
-2. **Interface/pocket identification:** Run pocket detection or ProLIF protein-protein mode to define interface residues. **Download structure files.**
+2. **Interface/pocket identification:** Run pocket detection or interaction-visualizer protein mode to define interface residues. **Download structure files.**
 3. **Conformational sampling baseline:** Run BioEmu or OpenMM to characterize wild-type conformational diversity. **Download all trajectory/structure files.**
 4. **ProteinMPNN design** with fixed interface residues, multiple temperatures (0.1, 0.2), ≥ 8 candidates.
 5. **Score by NLL fitness.**
+6. **Optional FoldX cross-validation:** Run `foldx_tool mode=buildmodel` on the top ProteinMPNN candidates to obtain ΔΔG as an independent stability predictor orthogonal to NLL fitness. Candidates ranked well by both NLL and FoldX ΔΔG are higher confidence.
 
 **⚠ COUNT GATE:** Verify actual number of designs generated from ProteinMPNN output.
 
@@ -132,7 +151,7 @@ Partition ALL residues into three classes:
 
 1. **Complex structure prediction (Chai-1):** Predict complex of wild-type + binding partner AND top designed candidate + binding partner. **Download ALL complex structures.**
 2. **Protein-protein docking (HDOCK):** Dock designed protein against binding partner. **Download docked complexes.**
-3. **Interface interaction analysis (ProLIF protein-protein mode):** Compare wild-type and designed interactions. **Download ProLIF images.**
+3. **Interface interaction analysis (interaction-visualizer protein mode):** Compare wild-type and designed interactions using `interface_heatmap` and `interface_network` outputs. **Download all interaction images.**
 4. **Verify ALL fixed interface residues maintain native contacts.** Use mapped residue numbering.
 5. **Conformational sampling comparison:** Run BioEmu/OpenMM on designed protein. **Download conformations.** Reduced conformational diversity relative to wild-type suggests improved thermostability.
 
@@ -142,11 +161,89 @@ Partition ALL residues into three classes:
 - Were critical interface contacts maintained?
 - Did the final candidate show reduced conformational diversity relative to wild-type?
 
-## ProSST Mutation Prediction (Scene B)
+## FoldX Mutation Effect Prediction (Scene B)
 
-Call `pred_mutant_sequence` to predict mutation effects.
+Use FoldX to predict the energetic effect of specific mutations or to discover beneficial mutations through saturating mutagenesis. This replaces the previously unavailable ProSST tool with a physics-based alternative.
 
-**Using ProSST to guide ProteinMPNN:** Run ProSST first, identify the top 10–20 mutable positions, then run ProteinMPNN with these as the only designable positions. This combined approach yields more conservative designs.
+### Step B1: FoldX Structure Preparation (MANDATORY)
+
+Before any FoldX energy calculation, the structure must be repaired with FoldX's own RepairPDB:
+
+```python
+# Step B1a: standard pdbfixer repair (if not already done in Skill 1)
+# Step B1b: FoldX-specific repair (MANDATORY for all FoldX modes)
+response = await client.session.call_tool("foldx_tool", arguments={
+    "mode": "repairpdb",
+    "pdb_path": prepared_pdb_path
+})
+repair_result = client.parse_result(response)
+# Download repaired PDB (Category A)
+foldx_repaired_pdb = repair_result["output_dir"] + "/" + [
+    k for k in repair_result["key_files"] if k.endswith("_Repair.pdb")
+][0]
+```
+
+**Download the FoldX-repaired PDB via `server_file_to_base64` — Category A output.** This file is the ONLY acceptable input for subsequent FoldX modes.
+
+### Step B2: Mutation Effect Assessment
+
+**Option B2a — Known mutations (BuildModel):**
+
+When the user provides specific mutations to evaluate:
+
+1. Write mutation list file in FoldX format. Each line: `OrigAA(1-letter) + ChainID + ResNum + NewAA;`. Example: `LA42G;` (chain A, position 42, Leu→Gly). **Residue numbering (L3 Principle 17):** use PDB file numbering, not UniProt.
+2. Upload mutant file to server via `upload_file`.
+3. Call FoldX BuildModel:
+
+```python
+response = await client.session.call_tool("foldx_tool", arguments={
+    "mode": "buildmodel",
+    "pdb_path": foldx_repaired_pdb,
+    "mutant_file": mutant_file_server_path,
+    "number_of_runs": 5
+})
+result = client.parse_result(response)
+mean_ddg = result["metrics"]["mean_ddg"]
+ddg_values = result["metrics"]["ddg_values"]
+```
+
+4. Interpret: ΔΔG < −0.5 kcal/mol = stabilizing candidate. ΔΔG > 1.0 = destabilizing. |ΔΔG| < 0.5 = within noise.
+
+**Option B2b — Discover beneficial mutations (PositionScan):**
+
+When the user wants to find which mutations are beneficial at specific sites:
+
+1. Identify target positions from task description, structural analysis, or literature.
+2. Construct positions string: e.g. `"RA32a,KA45a"` (scan all 20 AAs at each position). **Use PDB numbering.**
+3. Call FoldX PositionScan:
+
+```python
+response = await client.session.call_tool("foldx_tool", arguments={
+    "mode": "positionscan",
+    "pdb_path": foldx_repaired_pdb,
+    "positions": "RA32a,KA45a"
+})
+result = client.parse_result(response)
+```
+
+4. Parse `PS_{stem}_scanning_output.txt` from output_dir: for each position, rank substitutions by ΔΔG. Select ΔΔG < −0.5 as candidates.
+
+**⚠ COUNT GATE (L3 Principle 11):** Verify the number of mutations evaluated matches the expected count from the mutant file or positions specification.
+
+### Step B3: Combine and Validate Top Mutations
+
+If multiple beneficial single mutations are identified, combine them into multi-point mutants and re-evaluate with BuildModel to check for additivity (combined ΔΔG ≈ sum of individual ΔΔGs) or epistasis.
+
+**CHECKPOINT after Scene B:**
+- [ ] ΔΔG values obtained from FoldX tool calls (not from LLM inference — L3 Principle 13)
+- [ ] Residue numbering scheme documented and correctly mapped to PDB numbering
+- [ ] Values interpreted correctly (negative = stabilizing, positive = destabilizing)
+- [ ] Results with |ΔΔG| < 0.5 kcal/mol flagged as within FoldX noise range
+- [ ] FoldX-repaired PDB downloaded and verified non-empty
+
+Proceed to Multi-Layer Validation (below) for structural confirmation of top candidates.
+
+**Cross-validation with ProteinMPNN (recommended):** Run ProteinMPNN with `score_only=True` on the same mutations. ProteinMPNN NLL (sequence probability) and FoldX ΔΔG (physics energy) are orthogonal metrics — candidates ranked well by both are higher confidence.
 
 ## Multi-Layer Validation (All Scenes)
 
@@ -241,7 +338,7 @@ Before writing any round summary:
 - [ ] pLDDT scores verified from tool returns
 - [ ] RMSD limitation honestly stated in report
 - [ ] Mutations classified by region (with mapped numbering)
-- [ ] For Scene F: interface conservation verified against wild-type ProLIF
+- [ ] For Scene F: interface conservation verified against wild-type interaction-visualizer output
 
 **CHECKPOINT before final report:**
 - [ ] All structure files accounted for in file inventory
@@ -257,6 +354,6 @@ Before writing any round summary:
 | Mutation list | CSV: position (mapped), WT_aa, designed_aa, region | Report | **A — MUST download** |
 | Validation summary | Markdown | Report | B — record in log |
 | Iteration trajectory | Table with verified values | Report | B — record in log |
-| ProLIF images (Scene F) | PNG/SVG | Report | **A — MUST download** |
+| Interaction analysis images (Scene F) | PNG | Report | **A — MUST download** |
 | Chai-1 complexes (Scene F) | PDB/CIF | User verification | **A — MUST download** |
 | Residue mapping table | CSV | Report | **A — MUST download** |

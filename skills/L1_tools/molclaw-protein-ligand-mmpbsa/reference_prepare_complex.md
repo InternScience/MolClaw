@@ -10,8 +10,7 @@ metadata:
 
 ## Usage
 
-
-### 2. Scenario Description
+### 1. Scenario Description
 
 Builds the MD-ready complex for MM/PBSA runs so that downstream `run_mmpbsa` can rely on a structured workspace.
 
@@ -31,11 +30,9 @@ Returns:
 - `output_dir` (str): Complex workspace containing MD artifacts.
 - `files` (List[str] | None): Enumerated files produced in `output_dir` (e.g., `em.gro`, `md.xtc`).
 
-### 3. How to use tool `prepare_complex`
+### 2. How to use tool `prepare_complex`
 
 ```python
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-await client.connect()
 response = await client.session.call_tool(
     "prepare_complex",
     arguments={
@@ -51,7 +48,6 @@ response = await client.session.call_tool(
 )
 result = DrugSDAClient.parse_result(response)
 complex_dir = result.get("output_dir")
-await client.disconnect()
 ```
 
 #### Example parameter sets

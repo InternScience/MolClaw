@@ -10,8 +10,7 @@ metadata:
 
 ## Usage
 
-
-### 2. Scenario Description
+### 1. Scenario Description
 
 Prepare a protein-only MD workspace for protein-protein MM/PBSA analysis by running the full GROMACS pipeline with customizable times and temperatures.
 
@@ -35,11 +34,9 @@ Return:
 - `npt_time` (float): Effective NPT time.
 - `files` (List[str]): Files generated in `run_dir` (e.g., em.gro, md.tpr, md.xtc, topol.top).
 
-### 3. How to use tool `prepare_protein_md`
+### 2. How to use tool `prepare_protein_md`
 
 ```python
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-await client.connect()
 response = await client.session.call_tool(
     "prepare_protein_md",
     arguments={
@@ -53,7 +50,6 @@ response = await client.session.call_tool(
 )
 result = DrugSDAClient.parse_result(response)
 workspace = result.get("run_dir")
-await client.disconnect()
 ```
 
 #### Example parameter sets

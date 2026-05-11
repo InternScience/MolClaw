@@ -8,6 +8,11 @@ metadata:
 
 # Molecule SMILES Valid Check
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 The description of tool *is_valid_smiles*.
 
 ```tex
@@ -34,4 +39,3 @@ response = await client.session.call_tool(
 result = client.parse_result(response)
 valid_res = result["valid_res"]
 ```
-

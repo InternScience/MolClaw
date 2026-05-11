@@ -8,7 +8,12 @@ metadata:
 
 # File Transfer
 
-### 1. Transfer local file to MCP server
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
+### 1. Transfer local file to SCP server
 
 Example code:
 
@@ -40,7 +45,7 @@ save_file = result["save_file"]	#Server file path after transfer
 await client.disconnect() 
 ```
 
-### 2. Transfer MCP server file to local
+### 2. Transfer SCP server file to local
 
 Example code:
 
@@ -71,4 +76,3 @@ with open(local_file_path, "wb") as f:
 
 await client.disconnect()
 ```
-

@@ -10,8 +10,7 @@ metadata:
 
 ## Usage
 
-
-### 2. Scenario Description
+### 1. Scenario Description
 
 Repair a PDB file using PDBFixer, optionally adding hydrogens or modeling missing residues, and return the cleaned structure plus topology counts.
 
@@ -36,11 +35,9 @@ Return:
 - `residue_count` (int | None): Residue count when available.
 - `chain_count` (int | None): Number of chains detected.
 
-### 3. How to use tool `fix_pdb`
+### 2. How to use tool `fix_pdb`
 
 ```python
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-await client.connect()
 response = await client.session.call_tool(
     "fix_pdb",
     arguments={
@@ -57,7 +54,6 @@ response = await client.session.call_tool(
 )
 result = DrugSDAClient.parse_result(response)
 fixed_pdb = result.get("output_file")
-await client.disconnect()
 ```
 
 #### Example parameter sets

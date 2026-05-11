@@ -8,6 +8,11 @@ metadata:
 
 # Boltz-2 Protein-Ligand Binding
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 step 1. Use skill **molclaw-protein-sequence-retrieve** to get the target protein sequence information. If the target protein sequence has been provided, skip this step.
 
 step 2. Finally use tool *pred_binding_affinity_boltz2* to predict the binding affinity.  
@@ -41,29 +46,3 @@ result = client.parse_result(response)
 affinity_probability_binary = result["affinity_probability_binary"]
 affinity_pred_value = result["affinity_pred_value"]
 ```
-
-
----
-
-## ⚠ Mandatory Complex CIF Download (L3 Principle 14)
-
-**After calling `pred_binding_affinity_boltz2`, ALWAYS download the `complex_cif_file`** — this is the predicted protein-ligand complex structure. It is a Category A file, essential for downstream interaction analysis (ProLIF), visualization, and user verification.
-
-```python
-import base64, os
-response = await client.session.call_tool(
-    "server_file_to_base64",
-    arguments={"file_path": result["complex_cif_file"]}
-)
-dl = client.parse_result(response)
-local_path = f"step{N}_boltz2_complex.cif"
-with open(local_path, "wb") as f:
-    f.write(base64.b64decode(dl["base64_string"]))
-assert os.path.getsize(local_path) > 0
-```
-
-## ⚠ Output Plausibility Check (L3 Principle 12 Checkpoint A)
-
-- `affinity_probability_binary` must be in [0, 1]. Values outside this range indicate tool error.
-- `affinity_probability_binary` < 0.5 suggests uncertain/weak binding — note this in the report.
-- The predicted complex structure uses **1-based sequential numbering** from the input sequence. If you need to interpret specific residue interactions, apply residue numbering mapping (see `molclaw-residue-mapper`).

@@ -10,8 +10,7 @@ metadata:
 
 ## Usage
 
-
-### 2. Scenario Description
+### 1. Scenario Description
 
 Executes gmx_MMPBSA on the prepared workspace; writes GB/PB CSVs and returns parsed energy summaries for the workflow.
 
@@ -33,11 +32,9 @@ Returns:
 - `gb_dir`, `pb_dir` (str | None): Output folders (e.g., `work_dir/mmgbsa`, `work_dir/mmpbsa`).
 - `results` (Dict[str, Any]): Parsed energies from FINAL_RESULTS/FINAL_DECOMP.
 
-### 3. How to use tool `run_mmpbsa`
+### 2. How to use tool `run_mmpbsa`
 
 ```python
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-await client.connect()
 response = await client.session.call_tool(
     "run_mmpbsa",
     arguments={
@@ -49,7 +46,6 @@ response = await client.session.call_tool(
     },
 )
 result = DrugSDAClient.parse_result(response)
-await client.disconnect()
 ```
 
 #### Example parameter sets

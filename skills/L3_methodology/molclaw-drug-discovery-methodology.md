@@ -8,6 +8,8 @@ description: >
   tool-call sequences; instead, it provides the meta-knowledge that guides the agent toward
   sound, verifiable, and reproducible decisions. All workflow-level (L2) and tool-level (L1)
   skills should be executed in accordance with the principles set forth herein.
+  For tasks involving autonomous discovery, novel workflow authoring, or skill self-generation,
+  also load the Chapter 8 Supplement (molclaw-drug-discovery-methodology-supplement-ch8).
 license: MIT license
 metadata:
     skill-author: PJLab
@@ -18,6 +20,10 @@ metadata:
       Expanded Chapter 3 with anti-fabrication, continuous self-audit, and computation-first
       principles. Expanded Chapter 6.3 with thermostability-interface preservation design.
       Added docking parameter safeguards. Total principles: 12 → 22.
+      Added Chapter 8 Supplement reference for autonomous discovery and skill
+      self-generation (Principles 23–26, five triggers T1–T5, skill revision protocol,
+      data flow connectivity map, methodological precision table).
+      Total principles: 22 → 26 (with supplement).
 ---
 
 # MolClaw Drug Discovery Methodology
@@ -36,7 +42,7 @@ Upon receiving any drug discovery task, complete the following analysis before i
 
 **Step three — plan the execution path.** Decompose the task into ordered stages. Clarify which stages have strict dependencies (e.g., structure must exist before docking), which can be parallelized or skipped (e.g., skip structure preparation if the user has already provided a clean PDB), and which stage is the most computationally expensive bottleneck (typically MD simulation or large-scale docking). Before the bottleneck stage, prioritize faster methods for pre-screening to reduce the computational load.
 
-**Step four — anticipate file collection needs.** Identify which pipeline steps will produce structure files, image files, or other critical outputs. Plan explicitly which files must be downloaded from the MCP server at each step (see Chapter 4, Principles 14–16). Do not defer this planning — file collection must be integrated into the execution plan from the start.
+**Step four — anticipate file collection needs.** Identify which pipeline steps will produce structure files, image files, or other critical outputs. Plan explicitly which files must be downloaded from the SCP server at each step (see Chapter 4, Principles 14–16). Do not defer this planning — file collection must be integrated into the execution plan from the start.
 
 **Step five — anticipate residue numbering issues.** If the task references specific residue numbers (e.g., "confirm interaction with Met793"), determine which numbering scheme the task uses (usually UniProt or literature numbering). Check whether the protein structures to be used employ a different scheme. If a mapping will be needed, plan the mapping step explicitly (see Chapter 5, Principle 17). Record the anticipated mapping in the execution plan.
 
@@ -50,7 +56,9 @@ The core logic of drug discovery is a funnel — progressively narrowing a large
 
 **Tier 2 (seconds to minutes per molecule): docking assessment.** Use QuickVina2-GPU or DiffDock to evaluate geometric complementarity with the target. Note that docking scores are ranking tools, not absolute affinities. Docking box dimensions must be at least 25 Å per axis (see Chapter 5, Principle 18).
 
-**Tier 3 (minutes per molecule): multi-dimensional rescoring.** Use at least two of EquiScore rescoring, ProLIF interaction analysis, and Boltz-2 affinity prediction to cross-validate docking results. Candidates ranked consistently across methods are more trustworthy.
+**Tier 3 (minutes per molecule): multi-dimensional rescoring.** Use at least two of EquiScore rescoring, interaction analysis (interaction-visualizer preferred; ProLIF for batch/trajectory), and Boltz-2 affinity prediction to cross-validate docking results. Candidates ranked consistently across methods are more trustworthy.
+
+**Tier 3 extension for protein engineering tasks: empirical force-field evaluation.** Use FoldX for mutation effect prediction (ΔΔG via BuildModel or PositionScan), interface energy assessment (AnalyseComplex), and hotspot identification (AlaScan). FoldX operates at Tier 3 speed (minutes per structure) but provides physical energy quantities rather than purely geometric or statistical scores. For protein-protein systems, FoldX AnalyseComplex serves as an intermediate validation between docking (Tier 2) and full MD-MMPBSA (Tier 4). See L1 skill `molclaw-foldx-tool` for mode reference and scoring interpretation.
 
 **Tier 4 (hours per molecule): dynamics-based validation.** Use GROMACS or OpenMM for short MD simulations and gmx_MMPBSA for binding free energy calculations to assess binding stability and thermodynamics. Apply only to final candidates (typically no more than five).
 
@@ -138,11 +146,14 @@ The specific rules are as follows.
 
 In reports, strictly distinguish the following three categories of information using different phrasing.
 
-**Category 1 — Tool-computed facts:** Values produced by tool calls during this execution session. These should be precise to the numerical value and cite the source tool. Examples: "QuickVina docking score: −8.3 kcal/mol"; "ADMET-AI predicted CYP3A4 inhibition probability: 0.72"; "ProLIF detected a hydrogen bond interaction with Met769 (PDB 1M17 numbering = Met793 UniProt)."
+**Category 1 — Tool-computed facts:** Values produced by tool calls during this execution session. These should be precise to the numerical value and cite the source tool. Examples: "QuickVina docking score: −8.3 kcal/mol"; "ADMET-AI predicted CYP3A4 inhibition probability: 0.72"; "Interaction visualizer detected a hydrogen bond interaction with Met769 (PDB 1M17 numbering = Met793 UniProt)."
 
 **Category 2 — Agent interpretations and analysis:** Inferences drawn by the agent from the computed data. These should be explicitly labeled. Examples: "This docking score suggests moderate binding potential (agent analysis)"; "The elevated CYP3A4 inhibition risk may be attributable to the metabolic susceptibility of the methoxyethoxy side chains (agent inference)."
 
 **Category 3 — Literature-derived values:** Data obtained from published papers or known databases, not computed during this session. These MUST be labeled with the source. Examples: "⚠️ LITERATURE VALUE: Erlotinib IC₅₀ ≈ 2 nM in cell-free kinase assay (Stamos et al., 2002, DOI:10.1074/jbc.M207135200)." See Principle 13 for the full protocol on when and how literature may be used.
+
+<!-- NEW: Active retrieval of Category 3 -->
+**Active retrieval of Category 3.** When LR research tools are available (see `skills/LR_research/`), the agent SHOULD actively search for Category 3 values (PubMed, web) rather than relying on training-time recall. Actively retrieved values carry verifiable sources (PMID, DOI, URL) and are documented in `run_log.md`, making them more reliable than LLM-recalled values. However, actively retrieved values remain Category 3 — not Category 1 — regardless of retrieval method. The distinction between tool-computed (Category 1) and literature-derived (Category 3) is fundamental and does not change with the retrieval method.
 
 This three-way distinction is critical for reproducibility: another researcher must be able to identify which values are independently verifiable from the tool outputs, which are the agent's analysis, and which come from external sources.
 
@@ -153,7 +164,7 @@ This principle directly addresses the problem of data inflation and fabricated c
 **Specific anti-fabrication protocol:**
 
 | Claim type | Verification method | Example command |
-|-----------|--------------------|-----------------| 
+|-----------|--------------------|-----------------|
 | "Generated N molecules" | Count entries in the output file | `python3 -c "import json; print(len(json.load(open('file.json'))))"` or `wc -l file.smi` |
 | "M molecules passed filter" | Count entries in the filtered output | `grep -c "PASS" filtered_results.csv` |
 | "Docking score of X kcal/mol" | Re-read the exact tool return | `grep 'affinity' result.pdbqt` or cite tool return value directly |
@@ -211,6 +222,7 @@ All quantitative results in the report MUST originate from actual tool computati
 **Level 4 (lowest authority, last resort only): Literature reference.** Only after genuinely exhausting Levels 1–3 may a literature value be cited. The protocol for using literature is:
 
 1. Before accepting the need for literature, pause and re-examine: "Is there truly no tool in my current toolkit that can compute even an approximate version of this value?" If there is, use it.
+1a. **If LR research tools are available, USE THEM to retrieve the literature value rather than recalling from training knowledge.** A PubMed search produces verifiable citations (PMID, DOI) that can be cross-checked, whereas LLM recall risks citation hallucination. Source priority: PubMed-retrieved (verifiable PMID) > Web-retrieved (verifiable URL) > LLM training knowledge (unverifiable — use ONLY if LR tools are unavailable or search returns no results). If using LLM training knowledge, add additional label: **"⚠️ LITERATURE VALUE (from training knowledge, not independently verified)"**. <!-- NEW -->
 2. Clearly label the value: **"⚠️ LITERATURE VALUE — not computed in this session"**
 3. Cite the specific source with authors, year, journal, and DOI.
 4. Cross-check the value against at least one additional independent literature source. If two literature sources disagree, report both values and the discrepancy.
@@ -226,11 +238,11 @@ All quantitative results in the report MUST originate from actual tool computati
 
 ## Chapter 4. File Collection and Data Provenance
 
-> This chapter addresses the systematic problem of incomplete file collection. Every structure file, image file, and critical data file produced during execution must be downloaded from the MCP server to the local workspace. A missing file cannot be recovered after the session ends.
+> This chapter addresses the systematic problem of incomplete file collection. Every structure file, image file, and critical data file produced during execution must be downloaded from the SCP server to the local workspace. A missing file cannot be recovered after the session ends.
 
 ### Principle 14: Mandatory Collection of ALL Structure Files
 
-Every molecular structure file generated during execution — whether it is an intermediate processing artifact or a final result — MUST be downloaded from the MCP server to the local workspace using the file-transfer skill (`server_file_to_base64` → local decode and save). The guiding principle is **over-download rather than under-download.**
+Every molecular structure file generated during execution — whether it is an intermediate processing artifact or a final result — MUST be downloaded from the SCP server to the local workspace using the file-transfer skill (`server_file_to_base64` → local decode and save). The guiding principle is **over-download rather than under-download.**
 
 **Structure file formats to collect:** PDB, PDBQT, SDF, MOL2, CIF, GRO, XTC, DCD, NC, TRR, PSF, PRM, TOP, TPR.
 
@@ -286,7 +298,8 @@ Every image file generated during execution must be downloaded using the same fi
 
 | Analysis Type | Tool/Step | Expected Image Output |
 |--------------|-----------|----------------------|
-| Interaction fingerprint analysis | ProLIF (all modes) | Interaction heatmap, frequency barplot |
+| Interaction fingerprint analysis (batch/trajectory) | ProLIF (docking, md, protein-protein modes) | Interaction heatmap, frequency barplot |
+| Interaction analysis + visualization (local) | interaction-visualizer | diagram2d_*.png (Schrödinger-style 2D), residue_bar_*.png, interface_heatmap_*.png, interface_network_*.png, pymol_*_{front,side,top}.png |
 | MD trajectory analysis | GROMACS/OpenMM analysis | RMSD plot, RMSF plot, contact persistence |
 | Energy decomposition | gmx_MMPBSA analysis | Per-residue energy contribution plot |
 | Structure quality assessment | ESMFold/Chai-1 | pLDDT coloring, confidence maps |
@@ -328,7 +341,7 @@ Different tools and databases use different residue numbering schemes for the sa
 | **UniProt canonical** | Full-length precursor sequence; used in most modern literature and task descriptions | Met793 |
 | **PDB author numbering** | Set by crystallographers; stored in ATOM records of PDB files; may include offsets and insertion codes (e.g., 100A) | Met769 (in PDB 1M17, offset = −24) |
 | **Tool-internal sequential** | Prediction tools (ESMFold, Boltz-2, Chai-1, ProteinMPNN) renumber from 1 based on the input sequence, ignoring the original numbering | Met125 (if input starts at EGFR residue 669) |
-| **Analysis tool output** | ProLIF, PLIP, gmx_MMPBSA report residue numbers as found in whatever PDB file was given as input | Matches whichever PDB was used as input |
+| **Analysis tool output** | interaction-visualizer, ProLIF, PLIP, gmx_MMPBSA report residue numbers as found in whatever PDB file was given as input | Matches whichever PDB was used as input |
 
 **Mandatory mapping protocol:**
 
@@ -358,14 +371,14 @@ Boltz-2 input starts at UniProt residue 669, so Boltz-2_internal = UniProt − 6
 
 **(d) When interpreting residue-specific tool outputs:** Always translate the tool's residue identifiers back to the task's reference scheme before drawing conclusions.
 
-- CORRECT: "ProLIF detected HBAcceptor at ALA145 (Boltz-2 internal numbering) = Ala719 in PDB 1M17 = Ala743 in UniProt. This confirms the Ala743 interaction mentioned in the task."
-- WRONG: "ProLIF detected HBAcceptor at ALA145. The task asked about Ala743, which was not found — interaction is absent." (This is a false negative caused by numbering mismatch.)
+- CORRECT: "Interaction visualizer detected HBond at ALA145 (Boltz-2 internal numbering, rec_resid_pdb=145) = Ala719 in PDB 1M17 = Ala743 in UniProt (rec_resid_mapped=743 with --resid_offset). This confirms the Ala743 interaction mentioned in the task."
+- WRONG: "Interaction visualizer did not find Ala743." (This is a false negative caused by numbering mismatch — check rec_resid_mapped column or set --resid_offset correctly.)
 
 **(e) In the final report:** Include the mapping table in the Methods or a dedicated "Residue Numbering Reference" section so that users can verify the correspondence.
 
 **Common traps to avoid:**
 - Searching for "Met793" in a Boltz-2 output that uses 1-based sequential numbering — it will not be found.
-- Reporting ProLIF residue identifiers (e.g., ILE159, VAL149) without noting that these are in the tool's internal numbering and have not been mapped back to the reference scheme.
+- Reporting interaction analysis residue identifiers (e.g., ILE159, VAL149) without noting that these are in the tool's internal numbering and have not been mapped back to the reference scheme. (Applies to interaction-visualizer `rec_resid_pdb` column, ProLIF output, and PLIP output.)
 - Assuming that two PDB files for the same protein use the same numbering — different crystal structures may use different numbering conventions.
 
 **Concrete implementation: `residue_mapper.py`**
@@ -389,6 +402,8 @@ python3 residue_mapper.py --pdb boltz2_complex.pdb --uniprot-id P00533 --chain A
 ```
 
 The output CSV contains columns: `chain, pdb_resnum, pdb_resname, one_letter, uniprot_resnum, tool_internal_num, match_type, notes`. Save this file as a step-numbered artifact (e.g., `step02_residue_mapping.csv`) and reference it whenever interpreting residue-specific analysis results. See `RESIDUE_MAPPER_GUIDE.md` for full CLI reference and edge-case handling.
+
+**Tool-level offset support: `molclaw-interaction-visualizer`.** The local interaction analysis script natively supports PDB→UniProt residue number reconciliation via `--resid_offset N` (where `N = UniProt_number − PDB_number`). When this parameter is set, all CSV outputs include a `rec_resid_mapped` column with the offset already applied. This eliminates the need for post-hoc mapping when using this tool. Compute the offset from `residue_mapper.py` output or from known sequence alignment before invoking the visualizer.
 
 ### Principle 18: Docking Parameter Safeguards
 
@@ -422,7 +437,7 @@ Log every retry attempt (box size used, outcome) in `run_log.md`.
 
 The central challenge of virtual screening is balancing efficiency with accuracy.
 
-The library size determines the number of screening tiers: fewer than 50 molecules may be evaluated in full; 50–500 molecules warrant two-tier screening; more than 500 molecules require three or more tiers. Pocket detection should use dual-method consensus; when the pocket is uncertain, consider parallel docking across multiple pockets. Ranking should use consensus scoring (e.g., rank fusion of Vina and EquiScore) rather than a single method. For final candidates (Top 5–10), execute ProLIF interaction analysis to verify the chemical plausibility of binding modes. The report must include complete screening funnel statistics: how many molecules were eliminated at each tier and for what reasons — verified by Principle 11.
+The library size determines the number of screening tiers: fewer than 50 molecules may be evaluated in full; 50–500 molecules warrant two-tier screening; more than 500 molecules require three or more tiers. Pocket detection should use dual-method consensus; when the pocket is uncertain, consider parallel docking across multiple pockets. Ranking should use consensus scoring (e.g., rank fusion of Vina and EquiScore) rather than a single method. For final candidates (Top 5–10), execute interaction analysis (interaction-visualizer preferred for per-structure deep analysis; ProLIF `prolif_docking` for batch fingerprint comparison) to verify the chemical plausibility of binding modes. The report must include complete screening funnel statistics: how many molecules were eliminated at each tier and for what reasons — verified by Principle 11.
 
 **Iteration in virtual screening:** If the first round of screening fails to identify satisfactory candidates (e.g., all molecules have docking scores above −7.0 kcal/mol), do not simply report failure. First diagnose the cause (Is the pocket selection correct? Is the molecular library appropriate for this target?), then decide whether to re-dock against a different pocket, generate new molecules with REINVENT to supplement the candidate library, or relax filtering thresholds and re-execute.
 
@@ -442,7 +457,7 @@ The central challenge of protein and peptide design is the triangular relationsh
 
 Determining the binding site is paramount; experimental data or literature-reported interface information should be used preferentially. After peptide design with EvoBind, independent validation with Chai-1 is mandatory — EvoBind's ipTM is a design score, not an independent prediction, and requires third-party confirmation. After protein sequence design with ProteinMPNN, a self-consistency check is mandatory — predict the structure of the designed sequence using ESMFold and verify that it is consistent with the design backbone. Peptide drugs require special attention to stability (protease degradation), membrane permeability, and immunogenicity, which are not fully covered by standard ADMET tools and must be discussed qualitatively in the report based on sequence features.
 
-**Iteration in peptide and protein design:** Round 1 uses EvoBind or ProteinMPNN for initial design, followed by Chai-1 validation to select candidates with ipTM above 0.6. Round 2 performs ProteinMPNN sequence optimization on the best candidates, fixing key residues. Round 3 uses ProLIF to analyze interface interactions, identifies positions amenable to improvement, and re-optimizes. If needed, cyclization (cyclic=True) or peptide length adjustment may be attempted.
+**Iteration in peptide and protein design:** Round 1 uses EvoBind or ProteinMPNN for initial design, followed by Chai-1 validation to select candidates with ipTM above 0.6. Round 2 performs ProteinMPNN sequence optimization on the best candidates, fixing key residues. Round 3 uses interaction-visualizer (peptide mode) to analyze interface interactions, identifies positions amenable to improvement, and re-optimizes. If needed, cyclization (cyclic=True) or peptide length adjustment may be attempted.
 
 **Specialized strategy: thermostability enhancement with binding interface preservation.**
 
@@ -453,17 +468,17 @@ Design protocol:
 **Step 1 — Define the constraint architecture.** Partition all residues into three classes:
 - **Fixed (never mutate):** All interface residues (both sides of each relevant interface), structural cysteines (especially those forming disulfide bonds), catalytic residues.
 - **Cautious (may mutate with validation):** Second-shell residues adjacent to the interface (within 5 Å of fixed residues); residues in structurally critical regions (helix caps, turn residues).
-- **Free (preferred mutation targets):** Surface-exposed non-interface residues; loop regions distant from functional sites; positions where ProSST or literature indicates tolerance for substitution.
+- **Free (preferred mutation targets):** Surface-exposed non-interface residues; loop regions distant from functional sites; positions where FoldX PositionScan, ProSST, or literature indicates tolerance for substitution (FoldX ΔΔG < 0.5 kcal/mol for most substitutions).
 
 Additional cysteine constraint: if the design goal does not involve introducing new disulfides, use `omit_aas="CX"` in ProteinMPNN to prevent introduction of new cysteines that could form non-native disulfide bonds.
 
 **Step 2 — Multi-round design with interface validation at every round.**
 
-Round 1: Structure prediction (wild-type baseline) → Interface/pocket identification → Conformational sampling baseline → ProteinMPNN design with fixed interface residues, multiple temperatures, ≥8 candidates → Score by NLL fitness.
+Round 1: Structure prediction (wild-type baseline) → Interface/pocket identification → Conformational sampling baseline → ProteinMPNN design with fixed interface residues, multiple temperatures, ≥8 candidates → Score by NLL fitness. Optionally run FoldX BuildModel on top ProteinMPNN candidates to obtain ΔΔG as an independent stability predictor orthogonal to NLL fitness.
 
 Round 2: Select top candidates by fitness → Predict structure of each (ESMFold) → **Critical diagnostic step:** compare per-residue pLDDT with wild-type. Identify positions where design decreased local confidence → Fix those problematic positions in the next iteration; optionally open high-confidence positions that were previously fixed. Generate refined candidates.
 
-Round 3: Interface binding validation — predict complex structures (Chai-1) for wild-type and top candidate with the binding partner → Protein-protein docking (HDOCK) → Interface interaction analysis (ProLIF protein-protein mode) → Verify ALL fixed interface residues maintain native contacts → Conformational sampling comparison: reduced conformational diversity in the designed protein vs. wild-type suggests improved thermostability.
+Round 3: Interface binding validation — predict complex structures (Chai-1) for wild-type and top candidate with the binding partner → Protein-protein docking (HDOCK) → Interface interaction analysis (interaction-visualizer protein mode preferred for single-structure visualization; ProLIF protein-protein mode for trajectory analysis) → Verify ALL fixed interface residues maintain native contacts → Optionally run FoldX AlaScan (with chains) on wild-type and designed complex to confirm hotspot residues (ΔΔG > 1.0 kcal/mol) are preserved → Conformational sampling comparison: reduced conformational diversity in the designed protein vs. wild-type suggests improved thermostability.
 
 **Key checkpoints specific to this strategy:**
 - Were positions causing pLDDT drops in Round 2 correctly identified and constrained in subsequent rounds?
@@ -480,6 +495,17 @@ Before cross-docking, perform residue-level sequence alignment between targets t
 **Critical rule:** Do NOT convert docking score differences (ΔScore) into selectivity fold-changes via thermodynamic equations (ΔG = RT·ln(Kd)). Docking scores are approximate ranking tools, not thermodynamically exact free energies. Only the direction and relative magnitude of ΔScore are informative.
 
 **Residue numbering is especially critical in multi-target work** (Principle 17): different PDB structures for homologous targets may use entirely different numbering schemes. Build a cross-target alignment table before interpreting any interaction comparison.
+
+### 6.4a Multi-Target Dual-Activity Strategy
+
+When the goal is DUAL ACTIVITY (high affinity on BOTH targets) rather than selectivity (high on one, low on another), the design logic inverts:
+
+- **Exploit conserved residues:** Interactions at conserved positions contribute to binding at BOTH targets — these are the anchor points to preserve.
+- **Navigate divergent residues carefully:** At positions where targets differ, modifications must be compatible with BOTH amino acid identities. Avoid modifications that form strong interactions with Target 1's residue but clash with Target 2's residue at the same alignment position.
+- **Bottleneck-first optimization:** In each iteration round, diagnose which target has the weaker binding, and prioritize modifications that improve binding at THAT target while maintaining binding at the other.
+- **Cross-target interaction monitoring:** After each design round, check interaction fingerprints at BOTH targets to ensure no anchor interaction was disrupted.
+
+This strategy is operationalized in Skill 5 Scene D.
 
 ---
 
@@ -560,3 +586,7 @@ The `run_log.md` must include a complete File Inventory listing every file in th
 | 20 | Honest Uncertainty Annotation | 7 | Flag all uncertainty sources explicitly |
 | 21 | Data Provenance in Log | 7 | Checkpoint C audit table is mandatory |
 | 22 | File Inventory Completeness | 7 | Every file listed, classified, accounted for |
+| 23 | Capability Landscape Mapping | 8 (Supplement) | Data flow connectivity map; A/B/C feasibility grading; scientific value heuristics; problem discovery |
+| 24 | Autonomous Workflow Authoring | 8 (Supplement) | Draft workflow standards; paradigm matching; scope limits |
+| 25 | Experiential Crystallization | 8 (Supplement) | Triggers T1–T5; five-step process; failure-triggered retrieval; skill revision protocol; mandatory post-execution self-assessment |
+| 26 | Capability Boundary Self-Awareness | 8 (Supplement) | Three boundary dimensions; methodological precision table; dynamic update; honest communication |

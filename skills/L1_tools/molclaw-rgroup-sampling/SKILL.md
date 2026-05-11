@@ -1,97 +1,46 @@
 ---
 name: molclaw-rgroup-sampling
-description: Generate new molecules by decorating a scaffold with R-groups at specified attachment points, using LibInvent for scaffold-constrained molecular generation.
+description: Generate new molecules sampling from the input scaffold. 
 license: MIT license
 metadata:
     skill-author: PJLab
 ---
 
-# R-Group Molecule Generation (LibInvent)
+# Molecule Generation from Scaffold
 
-## When to Use This Tool
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
 
-Use LibInvent R-group sampling when you have a **fixed molecular scaffold with defined attachment points** and want to explore different substituents. Ideal for SAR studies, scaffold decoration, and library enumeration.
-
-**Do NOT use when:** you want to modify the overall structure (use `reinvent_mol2mol_sampling`); you want RL-driven R-group optimization toward property targets (use `libinvent_rgroup_optimization`).
-
-## Tool 1: `libinvent_rgroup_sampling_by_scaffold` — Custom Scaffold
-
-```tex
-Generate molecules by decorating a user-provided scaffold at marked R-group positions.
-Args:
-    scaffold (str): Scaffold SMILES with R-group positions marked as [*:1], [*:2], etc. Example: 'c1ccc([*:1])cc1C(=O)N[*:2]'
-    n (int): Number of molecules to sample
-    lipinski (bool): Default True
-    filter_preset (str): Options: 'none', 'minimal', 'default', 'strict'. Default 'default'.
-Return:
-    status (str): 'success' or 'error'
-    msg (str): Descriptive message
-    save_smiles_file (str): Path to saved CSV with decorated molecules and properties
-    output_smiles_list (List[str]): List of generated fully-decorated SMILES
-```
-
-## Tool 2: `libinvent_rgroup_sampling_by_scaffold_name` — Predefined Scaffolds
+The description of tool *libinvent_rgroup_sampling_by_scaffold*.
 
 ```tex
-Generate molecules using a predefined common drug scaffold.
+Generate new molecules sampling from the input scaffold.
 Args:
-    scaffold_name (str): Options:
-        - 'benzamide': amide-linked biaryl
-        - 'biphenyl': biphenyl axis
-        - 'pyrimidine': trisubstituted pyrimidine
-        - 'indole': indole scaffold
-        - 'quinoline': quinoline scaffold
-        - 'piperidine_phenyl': phenylpiperidine
-        - 'sulfonamide': sulfonamide
-        - 'phenyl': disubstituted phenyl
-        - 'pyridine': pyridine
-        - 'morpholine': morpholine
-        - 'triazine': triazine
-        - 'trisubstituted_benzene': 1,3,5-trisubstituted benzene
-    n (int): Number of molecules to sample
-    filter_preset (str): Default 'default'
-    lipinski (bool): Default True
+    scaffold (str): Input scaffold SMILES string containing R-group position markers such as [*:1], [*:2], etc. e.g., 'c1ccc([*:1])cc1C(=O)N[*:2]'
+    n (int): Number of molecules for sampling
+    lipinski (bool): Whether to apply Lipinski's rule of five filtering, default is True
+    filter_preset (str): Filter preset, options: ['none', 'minimal', 'default', 'strict'], default is 'default'
 Return:
-    Same as Tool 1
+    status (str): success/error
+    msg (str): message
+    save_smiles_file (str): Path to the saved SMILES file
+    output_smiles_list (List[str]): List of generated SMILES strings
 ```
 
-## Scaffold SMILES Format
-
-Mark each R-group position with `[*:N]` (N = unique integer):
-- 1 position: `c1ccc([*:1])cc1`
-- 2 positions: `c1ccc([*:1])cc1C(=O)N[*:2]`
-- 3 positions: `[*:1]c1cc([*:2])nc([*:3])n1`
-
-**Common mistakes:** Use `[*:1]` not `[*1]` or bare `*`. Ensure valid RDKit-parseable SMILES.
-
-## Usage Examples
+How to use tool *libinvent_rgroup_sampling_by_scaffold* :
 
 ```python
-# Custom scaffold
 response = await client.session.call_tool(
     "libinvent_rgroup_sampling_by_scaffold",
-    arguments={"scaffold": "c1ccc([*:1])cc1C(=O)N[*:2]", "n": 100, "lipinski": True, "filter_preset": "default"}
+    arguments={
+        "scaffold": scaffold,
+        "n": n,
+        "lipinski": True,
+        "filter_preset": filter_type
+    }
 )
-
-# Predefined scaffold
-response = await client.session.call_tool(
-    "libinvent_rgroup_sampling_by_scaffold_name",
-    arguments={"scaffold_name": "pyrimidine", "n": 100, "lipinski": True, "filter_preset": "default"}
-)
+result = client.parse_result(response)
+output_smiles_list = result["output_smiles_list"]
 ```
-
-## Important Notes
-
-1. **Output is the fully decorated molecule**, not the R-group fragment alone.
-2. **For RL-driven R-group optimization** with property targets, use `libinvent_rgroup_optimization` instead.
-3. **Custom scaffold parsing errors** are the most common failure. If the tool errors, try `by_scaffold_name` with the closest predefined scaffold as a diagnostic.
-
----
-
-## ⚠ Mandatory Generation Count Verification (L3 Principle 11)
-
-```python
-actual_count = len(result["output_smiles_list"])
-```
-
-**If actual count < 70% of requested:** Retry with `filter_preset='minimal'` or increased `n`.

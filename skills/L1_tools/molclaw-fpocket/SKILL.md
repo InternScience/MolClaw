@@ -8,6 +8,11 @@ metadata:
 
 # Pocket Detection
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 The description of tool *fpocket_toolkit*.
 
 ```tex
@@ -104,17 +109,3 @@ After detecting the pockets, please comprehensively evaluate their various prope
 
 
 **Note**: The input protein structure file should be repaired before running fpocket.
-
----
-
-## ⚠ Docking Box Size Enforcement (L3 Principle 18)
-
-When fpocket pocket dimensions are used for downstream docking (QuickVina, etc.), **enforce a minimum of 25.0 Å per dimension.** If any pocket dimension returned by fpocket is less than 25 Å, override it to 25.0 Å before passing to the docking tool.
-
-```python
-# After fpocket pocket detection:
-size_x = max(25.0, pocket["size_x"])
-size_y = max(25.0, pocket["size_y"])
-size_z = max(25.0, pocket["size_z"])
-```
-

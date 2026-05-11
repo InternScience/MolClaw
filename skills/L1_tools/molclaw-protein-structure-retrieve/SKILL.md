@@ -8,6 +8,11 @@ metadata:
 
 # Retrieve Protein Structure 
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 **Scene 1**: If the **gene name** is provided, please use tool *retrieve_protein_structure_by_gene_name*.
 
 The description of tool *retrieve_protein_structure_by_gene_name*.
@@ -94,17 +99,3 @@ response = await client.session.call_tool(
 result = client.parse_result(response)
 prot_structure_path = result["prot_structure_path"]
 ```
-
-
----
-
-## ⚠ Mandatory Structure File Download (L3 Principle 14)
-
-After retrieving a protein structure, **download the PDB file** from the MCP server to the local workspace. This is a Category A file — the foundation for all downstream workflows. Also download the FASTA file if provided.
-
-## ⚠ Record Numbering Scheme (L3 Principle 17)
-
-After downloading, document the structure's residue numbering scheme in `run_log.md`:
-- RCSB PDB: check DBREF records for UniProt offset
-- AlphaFold: uses UniProt canonical numbering
-- If the task references specific residues, plan a mapping step using `molclaw-residue-mapper`

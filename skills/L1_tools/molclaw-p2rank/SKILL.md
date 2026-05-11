@@ -8,6 +8,11 @@ metadata:
 
 # Pocket Location
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 The description of tool *pred_pocket_prank*.
 
 ```tex
@@ -37,10 +42,3 @@ response = await client.session.call_tool(
 result = client.parse_result(response)
 pred_pockets = result["pred_pockets"]
 ```
-
-
----
-
-## ⚠ Docking Box Size Enforcement (L3 Principle 18)
-
-When P2Rank pocket dimensions are used for downstream docking, **enforce a minimum of 25.0 Å per dimension.** If any dimension is less than 25 Å, override to 25.0 Å.

@@ -26,6 +26,10 @@ metadata:
 
 **This is L3 Tier 4 — the most expensive validation.** Apply only to a small number of final candidates, typically ≤ 5.
 
+**Fast alternative for protein-protein interface energy (FoldX):** If the goal is rapid ranking of protein-protein interface binding strength (minutes vs hours for MMPBSA), consider using `foldx_tool mode=analysecomplex` as a Tier 3 pre-screening step before committing to full MMPBSA. Use FoldX AnalyseComplex to rank candidates, then apply MMPBSA only to the top 3–5. See L1 skill `molclaw-foldx-tool` for details and scoring interpretation. Note: FoldX uses an empirical force field and is NOT a substitute for MMPBSA when quantitative ΔG is required — it is a fast ranking tool.
+
+**Alternative hotspot identification with FoldX AlaScan:** For faster hotspot residue identification without MD simulation, run `foldx_tool mode=alascan` with `chains` on the complex. Residues with ΔΔG(Ala) > 1.0 kcal/mol are interface hotspots. Cross-validate with MMPBSA per-residue decomposition when both are available.
+
 ## Prerequisites
 
 | Input | Source | Required? |
@@ -139,6 +143,21 @@ for img_file in analysis_output_images:  # PNG, SVG, PDF, TIFF, JPG
     # ... download via server_file_to_base64, save locally
 ```
 
+<!-- NEW: Optional LR experimental binding energy retrieval -->
+### Optional: Experimental Binding Energy Retrieval (if LR tools are available)
+
+After MMPBSA computation, search PubMed for experimental binding affinity data to cross-validate computational predictions:
+
+1. PubMed search: `"[target name] binding affinity Kd Ki ITC SPR"` (retmax=10)
+2. If experimental Kd/Ki values are found, convert to ΔG for comparison: ΔG = RT·ln(Kd) where R = 1.987 cal/(mol·K), T = 298 K.
+3. Report computational ΔG (MMPBSA) vs experimental ΔG side-by-side in `result.md`:
+   - Agreement (within ~2 kcal/mol): increases confidence in computational prediction
+   - Large discrepancy: may indicate force field limitations, insufficient sampling, or different experimental conditions — discuss in Limitations
+4. Record: `[LR] Experimental ΔG cross-validation: [compound] Kd=[value] (PMID:[id]) → ΔG_exp=[value] vs ΔG_MMPBSA=[value]`
+5. All experimental values are Category 3 (⚠️ LITERATURE VALUE) per Principle 10.
+
+This directly supports L3 Principle 9 (cross-validation with independent evidence). **If LR tools are not available**, skip this step.
+
 ## Result Interpretation
 
 ### Per-Residue Decomposition with Numbering Mapping (L3 Principle 17)
@@ -150,7 +169,7 @@ Per-residue decomposition reports residue contributions using the numbering sche
 CORRECT: "Residue 50 (GROMACS internal numbering = Leu718 UniProt = Leu694 PDB 1M17) contributes −2.3 kcal/mol to binding."
 WRONG: "Leu50 contributes −2.3 kcal/mol" (ambiguous — which Leu50?).
 
-**Hotspot residue cross-validation:** Residues with |contribution| > 1.0 kcal/mol are "hotspot residues." Cross-validate against ProLIF interaction data from Skill 2/8 — hotspot residues should correspond to residues forming strong interactions in the interaction fingerprint. **Use the same numbering mapping table for both analyses.**
+**Hotspot residue cross-validation:** Residues with |contribution| > 1.0 kcal/mol are "hotspot residues." Cross-validate against interaction-visualizer data (or ProLIF fingerprints) from Skill 2/8 — hotspot residues should correspond to residues forming strong interactions in `top_residues` from `summary_*.json`. **Use the same numbering mapping (--resid_offset) for both analyses.**
 
 **Total binding free energy (ΔG_bind, kcal/mol):** More negative = stronger binding.
 

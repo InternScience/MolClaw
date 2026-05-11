@@ -8,37 +8,13 @@ metadata:
 
 # Molecule Optimization for Physicochemical Properties
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 ## step 1
 Use skill **molclaw-admet** to calculate multiple physicochemical properties for the source molecule and generate a summary report, with special emphasis on the properties specified in the user query.
-
-## step 1.5 — RL-Assisted Generation (Recommended When Applicable)
-
-**If the optimization target can be expressed as numeric property ranges** (e.g., "lower LogP to 1-3", "improve QED above 0.7", "MW between 300-500"), use `reinvent_similarity_optimization` to generate a batch of optimized candidates BEFORE applying LLM reasoning:
-
-```python
-response = await client.session.call_tool(
-    "reinvent_similarity_optimization",
-    arguments={
-        "target_smiles": source_smiles,
-        "similarity_weight": 0.5,        # Keep similarity to source
-        "fp_radius": 2,
-        "qed_weight": 0.3,               # Set >0 if QED is a target
-        "mmp_weight": 0.0,
-        "mw_weight": mw_wt,              # Set >0 if MW is a target
-        "mw_low": target_mw_low, "mw_high": target_mw_high,
-        "logp_weight": logp_wt,           # Set >0 if LogP is a target
-        "logp_low": target_logp_low, "logp_high": target_logp_high,
-        "tpsa_weight": tpsa_wt,           # Set >0 if TPSA/solubility is a target
-        "tpsa_low": target_tpsa_low, "tpsa_high": target_tpsa_high,
-        "max_steps": 100
-    }
-)
-rl_candidates = client.parse_result(response)["output_smiles_list"]
-```
-
-Select the top candidates from the RL output (by ADMET evaluation in step 4), then optionally apply LLM reasoning (step 2) for further fine-tuning on the best RL candidate. This combination is more effective than LLM-only optimization because the RL optimizer can systematically explore the property landscape.
-
-**If the optimization target is qualitative** (e.g., "reduce metabolic liability", "improve oral bioavailability") and cannot be directly expressed as a numeric scoring function, proceed directly to step 2 (LLM reasoning).
 
 ## step 2
 Based on the molecular property analysis report generated in **step 1** and the following prompt, leverage the reasoning capabilities of the Large Language Model (LLM) to generate an optimized molecule from the source molecule, while providing a detailed rationale for the optimization.
@@ -197,12 +173,3 @@ Utilize skill **molclaw-admet** to calculate multiple physicochemical properties
 - **Solubility (LogS)**: Increase ≥ **4.0** (requiring a drastic enhancement in solubility).
 
 If the target properties fail to meet these **elevated thresholds**, conduct a deep root-cause analysis and critically reflect on the optimization strategy. You must **re-execute step 2** with a fundamentally different approach. **Under no circumstances** should you repeat a strategy that previously failed to achieve these significant improvements.
----
-
-## ⚠ Computation-First Principle (L3 Principle 13)
-
-Property values used for optimization decisions (LogP, QED, solubility, ADMET) MUST come from tool computations (`pred_mol_admet`, `calculate_mol_drug_chemistry`, etc.), not from LLM chemical intuition. Each optimization rationale must cite the specific tool-computed value it aims to improve.
-
-## ⚠ Data Integrity (L3 Principle 11)
-
-Before writing any comparison table or optimization trajectory, verify each value against the actual tool return. Report exact tool-returned values, not rounded or estimated numbers.

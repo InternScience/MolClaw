@@ -10,8 +10,7 @@ metadata:
 
 ## Usage
 
-
-### 2. Scenario Description
+### 1. Scenario Description
 
 Detect MM/PBSA and MM/GBSA outputs inside the MM/PBSA workspace, summarize binding energies, and write CSV/plot/MD tables under `work_dir/results`.
 
@@ -30,11 +29,9 @@ Return:
 - `files` (Dict[str, str]): Generated artifact paths inside `output_dir`.
 - `reports` (Dict[str, str | None]): Named CSV/PNG/MD artifacts when available.
 
-### 3. How to use tool `analyze_mmpbsa`
+### 2. How to use tool `analyze_mmpbsa`
 
 ```python
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-await client.connect()
 response = await client.session.call_tool(
     "analyze_mmpbsa",
     arguments={
@@ -42,7 +39,6 @@ response = await client.session.call_tool(
     },
 )
 result = DrugSDAClient.parse_result(response)
-await client.disconnect()
 ```
 
 #### Example parameter sets

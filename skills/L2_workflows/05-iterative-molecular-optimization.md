@@ -14,7 +14,7 @@ metadata:
       L3 Principle 11 (Count-Before-Report — verify all evaluation scores against tool returns),
       L3 Principle 13 (Computation-first — design rationale must cite tool data, not LLM training knowledge),
       L3 Principle 14 (Mandatory structure file collection — download Boltz-2 CIF, docking poses),
-      L3 Principle 15 (Mandatory image file collection — download interaction heatmaps),
+      L3 Principle 15 (Mandatory image file collection — download interaction analysis images),
       L3 Principle 17 (Residue numbering reconciliation — map interaction residues to task reference scheme)
 ---
 
@@ -22,7 +22,7 @@ metadata:
 
 ## Applicability
 
-**Use this skill when:** The user has a specific starting molecule and clear optimization targets (improve binding affinity, improve QED, reduce toxicity, enhance selectivity, etc.).
+**Use this skill when:** The user has clear optimization targets (improve binding affinity, improve QED, reduce toxicity, enhance selectivity, achieve dual-target activity, etc.), AND either (a) a specific starting molecule is provided, OR (b) a starting molecule will be acquired via Skill 4 (de novo generation) or literature/database retrieval as a preparatory step before entering the iterative loop.
 
 **Do NOT use this skill when:** The user needs to explore chemical space broadly without a defined optimization target (use Skill 4); or the task is single-point evaluation without optimization (use Skill 3 or Skill 2).
 
@@ -44,6 +44,14 @@ metadata:
 
 **Scene C: Multi-objective optimization (two or more conflicting targets).** Goal: simultaneously improve multiple properties that tend to trade off against each other. Core evidence: both Scene A and Scene B evaluation tools, with explicit Pareto trade-off tracking.
 
+**Scene D: Multi-target simultaneous optimization.** Goal: achieve binding thresholds on TWO OR MORE distinct target proteins simultaneously. Core evidence: independent docking scores per target, per-target interaction fingerprints. Scene D inherits Scene C's Pareto logic but adds multi-target-specific protocols:
+- **Independent target preparation:** Each target goes through Skill 1 independently, producing separate `prepared_pdb`, `numbering_scheme`, and pocket parameters.
+- **Per-target docking parameter locking:** Maintain a SEPARATE locked parameter set for each target (see "Multi-Target Docking Parameter Locking" section below).
+- **Unified evaluation matrix:** Step 1 evaluates each candidate against ALL targets. The assessment table has one score column per target.
+- **Bottleneck-first strategy:** In Step 2, prioritize the target where the current best molecule performs worst relative to its threshold. Examine interaction fingerprints at THAT target to identify optimization opportunities, while cross-checking that proposed modifications do not disrupt interactions at the other target(s).
+- **Cross-target interaction comparison:** When using interaction-visualizer, run it independently per target (with target-specific `--resid_offset`) and compare partner_site CSVs: modification candidates are ligand atoms that are low-interaction at the bottleneck target but NOT high-interaction (anchor) at other targets.
+- **Scene D success criteria:** ALL targets reach their respective thresholds simultaneously, OR the cross-target Pareto frontier is reached (documented quantitatively with per-target scores).
+
 All scenes share the same four-step iterative loop but differ in evaluation metrics.
 
 ## Iterative Loop Architecture
@@ -53,13 +61,23 @@ Each round consists of four steps forming an **Evaluate → Diagnose → Design 
 ### Step 1: Baseline Assessment (Round 1) / Current State Assessment (Round 2+)
 
 **Scene A evaluation:**
-1. Call `molecule_docking_quickvina` — record baseline docking score
-   - **Checkpoint A:** Score must be negative. If positive, execute progressive box enlargement (L3 Principle 18: 25→30→40→50 Å).
+1. Call `molecule_docking_quickvina_fullprocess` — record baseline docking score
+   - **Checkpoint A:** Score must be negative. If positive, execute progressive box enlargement (25→30→40→50 Å).
    - **Download** docking pose file (PDBQT) via `server_file_to_base64` → local save.
 2. Call `pred_binding_affinity_boltz2` — record binding probability and predicted affinity
    - **Download** complex CIF file (`complex_cif_file` field) — Category A.
-3. Convert Boltz-2 CIF to PDB, then call `analyze_protein_ligand_interactions` — map all interactions
-   - **Download** any interaction visualization images — Category A.
+3. **Interaction analysis** — choose based on availability and needs:
+   - **Option A (MCP):** Convert Boltz-2 CIF to PDB, then call `analyze_protein_ligand_interactions` — map all interactions.
+   - **Option B (local, preferred when 2D diagram or partner_site CSV needed, or when MCP unavailable):** Run `molclaw-interaction-visualizer`:
+     ```bash
+     python molclaw_interaction_visualizer.py \
+         --receptor prepared.pdb --ligand docking_pose.sdf \
+         --mode ligand --out_dir viz_out \
+         --resid_offset <offset> --score <vina_score> \
+         --residue_roles_json roles.json --title "Target–Seed"
+     ```
+     Parse `summary_*.json` → `top_residues` (anchor interactions) + `hot_partner_sites` (modification targets).
+   - **Download** all interaction visualization images — Category A (L3 Principle 15).
 4. Call `pred_mol_admet` — full ADMET profile
 
 **Computation-first rule (L3 Principle 13):** ALL values in this assessment — docking scores, interaction fingerprints, ADMET predictions — MUST come from tool calls performed in this session. Do NOT fill in values from LLM training knowledge (e.g., "the IC₅₀ of erlotinib is approximately 2 nM" without a tool call is forbidden). If literature comparison is needed, clearly label it: "⚠️ LITERATURE VALUE: ..."
@@ -70,6 +88,11 @@ From the interaction data, identify:
 - **Steric clashes** — sites where modification could relieve strain
 - **Pocket character** — hydrophobic vs. polar regions
 
+**Partner site diagnosis (when using interaction-visualizer):** Parse `*_partner_site.csv` to directly identify:
+- **Ligand atoms to preserve:** high interaction count → critical pharmacophore points that anchor the ligand
+- **Ligand atoms to modify:** low or zero interaction count → safe optimization candidates
+This output directly informs modification site selection in Step 2 below.
+
 **Residue Numbering Mapping (L3 Principle 17 — execute if task references specific residues):**
 Before interpreting interaction results, check whether the analysis structure's numbering matches the task's reference scheme. If not, build the mapping table (see Skill 1 numbering scheme info). All interaction residue IDs in the assessment must be translated to the task's reference scheme before drawing conclusions.
 
@@ -78,7 +101,7 @@ Before interpreting interaction results, check whether the analysis structure's 
 2. Focus on the user-specified target properties
 3. Identify which molecular features (functional groups, ring systems) are likely responsible for the problematic property values
 
-**Scene B generation strategy — RL optimizer preferred:** When the optimization targets can be expressed as QED, MW, LogP, or TPSA ranges, **use `reinvent_similarity_optimization` as the primary generation engine** rather than LLM-only design. Configure the weight parameters to match the user's targets (e.g., if the goal is "lower LogP to 1-3", set `logp_weight=0.2, logp_low=1, logp_high=3`). This produces molecules that are both similar to the seed and optimized toward the specified property ranges. See L1 skill `molclaw-similarity-optimization` for weight configuration recipes. LLM-guided design should be used as a supplement for modifications that require chemical reasoning beyond what the scoring function captures (e.g., bioisosteric replacements, metabolic soft-spot removal).
+**Scene B generation strategy — mol2mol sampling + filtering:** When the optimization targets can be expressed as property ranges, use `reinvent_mol2mol_sampling` with appropriate `prior_type` and `min_similarity` to generate structurally similar candidates, then filter using `calculate_mol_drug_chemistry` and `pred_mol_admet` to select molecules meeting the target property ranges. LLM-guided design should be used as a supplement for modifications that require chemical reasoning beyond what sampling captures (e.g., bioisosteric replacements, metabolic soft-spot removal). See L1 skill `molclaw-mol2mol-sampling` for prior type selection guide.
 
 **Computation-first rule for Scene B:** Property analysis must cite specific tool-computed values, not general LLM knowledge about drug chemistry. CORRECT: "ADMET-AI predicts CYP3A4 inhibition probability = 0.72; the methoxyethoxy group is a known O-demethylation substrate (agent analysis based on structural inspection of the tool output)." WRONG: "CYP3A4 inhibition is likely due to the methoxyethoxy group" (without first confirming the CYP3A4 probability from the tool).
 
@@ -101,6 +124,8 @@ Run BOTH Scene A and Scene B evaluation pipelines in full. Then additionally:
 2. **Establish the current Pareto status.** Record both objectives' values. Determine whether the current molecule is dominated by any previous round's best molecule.
 
 3. **Define the priority objective for this round.** In early rounds, prioritize whichever objective is further from its target.
+
+4. **ADMET Deterioration Alarm (Scene C mandatory).** After computing ADMET profiles, compare ALL endpoints against the baseline values — not only those flagged as problematic at baseline. Flag any endpoint where: absolute increase exceeds 0.15 (for probability endpoints in [0,1]), OR relative increase exceeds 100% from baseline, regardless of whether the agent's current optimization strategy targets that endpoint. Record flagged endpoints in `run_log.md` with: `⚠ ADMET ALARM: [endpoint] changed from [baseline] to [current] (+[absolute]/[relative]%).` This prevents the "unmonitored endpoint" blind spot observed in QED optimization benchmarks.
 
 **Scene C success criteria:**
 - Both objectives reach their user-specified thresholds simultaneously; OR
@@ -132,9 +157,9 @@ Based on Step 1's analysis, design 1–3 optimized molecules. This step leverage
 | "Generate N derivatives" (N ≥ 3) | REINVENT mol2mol as primary generator; LLM design as supplement if needed |
 | "Design 1–2 optimized molecules" | LLM design as primary; REINVENT as fallback for invalid SMILES |
 | "Retain core scaffold + generate variants" | REINVENT with `prior_type="scaffold_generic"`, followed by scaffold verification (see L2-04 Post-Generation step 3) |
-| "Only modify R-groups" | REINVENT R-group sampling (`libinvent_rgroup_sampling_by_scaffold`) or R-group RL optimization (`libinvent_rgroup_optimization`) if property targets are specified |
-| "Improve QED / LogP / solubility / ADMET" (explicit property targets) | **REINVENT RL similarity optimization** (`reinvent_similarity_optimization`) as primary generator — set `similarity_weight` + property weights with target ranges; use LLM design only for fine-tuning |
-| Multiple seeds from previous round (e.g., Top 5) | `batch_reinvent_mol2mol_sampling` to generate derivatives of all seeds in one call |
+| "Only modify R-groups" | REINVENT R-group sampling (`libinvent_rgroup_sampling_by_scaffold`) |
+| "Improve QED / LogP / solubility / ADMET" (explicit property targets) | REINVENT `reinvent_mol2mol_sampling` with property-aware filtering — generate candidates with appropriate prior_type, then filter using `calculate_mol_drug_chemistry` and `pred_mol_admet` to select molecules meeting target ranges; use LLM design for fine-tuning |
+| Multiple seeds from previous round (e.g., Top 5) | Call `reinvent_mol2mol_sampling` sequentially for each seed molecule |
 
 **When using REINVENT in iterative optimization:**
 - Set `smiles` = current round's seed molecule (see Seed Update Rule in Step 4)
@@ -142,7 +167,7 @@ Based on Step 1's analysis, design 1–3 optimized molecules. This step leverage
 - Apply the scaffold-constraint-aware prior selection table from L2-04
 - After generation, run the full Post-Generation Processing pipeline from L2-04 (validity → count gate → scaffold check → dedup → property filter)
 
-**Computation-first rule for design rationale (L3 Principle 13):** Each design MUST cite specific computed data from Step 1 as the basis for the proposed modification. CORRECT: "ProLIF shows no interaction at Leu718 (UniProt numbering, = Leu50 in Boltz-2 structure); adding a methyl group at C3 may form a hydrophobic contact." WRONG: "Based on known EGFR binding mode, we should add a hydrophobic group" (this is LLM knowledge, not a tool-computed observation).
+**Computation-first rule for design rationale (L3 Principle 13):** Each design MUST cite specific computed data from Step 1 as the basis for the proposed modification. CORRECT: "Interaction visualizer shows no interaction at Leu718 (UniProt numbering, rec_resid_mapped=718); adding a methyl group at C3 may form a hydrophobic contact." WRONG: "Based on known EGFR binding mode, we should add a hydrophobic group" (this is LLM knowledge, not a tool-computed observation).
 
 **Exploration–exploitation schedule (L3 Principle 6):**
 
@@ -183,7 +208,7 @@ Re-run Step 1's full evaluation on validated candidates. Compare against baselin
 | CYP3A4 prob | 0.72 (from tool return) | 0.65 (from tool return) | 0.43 (from tool return) | ADMET-AI |
 ```
 
-**Structure file downloads for this round (L3 Principle 14):** Download docking pose files and Boltz-2 complex CIF for each candidate evaluated. Download any ProLIF/interaction images generated.
+**Structure file downloads for this round (L3 Principle 14):** Download docking pose files and Boltz-2 complex CIF for each candidate evaluated. Download all interaction-visualizer/ProLIF images generated.
 
 **Scene A success criteria:** Docking score improvement ≥ 0.5 kcal/mol; OR Boltz-2 affinity improvement is significant; AND no critical ADMET property worsened.
 
@@ -208,6 +233,15 @@ ELSE (max rounds reached):
     → Include complete optimization trajectory
 ```
 
+### Post-Termination Experiential Learning Check (L3 Principle 25)
+
+After reporting the final result and before closing the task, evaluate whether the optimization trajectory revealed novel patterns warranting skill crystallization:
+
+- Did a novel failure-recovery strategy emerge during the optimization that is NOT in this workflow's "Common Failures & Recovery" table? → Trigger T2 may be active.
+- Did a non-standard strategy produce superior results compared to the exploration–exploitation schedule (Principle 6)? → Trigger T4 may be active.
+- Did a tool fail systematically under specific input conditions (e.g., REINVENT producing zero molecules at low seed Tanimoto)? → Trigger T5 may be active.
+- Proceed to L3 Principle 25.5 (Mandatory Post-Execution Self-Assessment) to formally evaluate all triggers.
+
 ### Seed Molecule Update Rule
 
 **After each round's evaluation, explicitly determine the seed molecule for the next round:**
@@ -230,6 +264,8 @@ ELSE (max rounds reached):
 
 **When the task defines termination based on cumulative results across rounds** (e.g., "stop when ≥ 2 molecules across all rounds meet ΔScore ≤ −2.0"), maintain a global tracker in `run_log.md`:
 
+**Single-target tracker:**
+
 ```
 ## Global Target Tracker
 | Round | Molecule SMILES | Score | ΔScore (vs baseline) | Target Met? |
@@ -242,13 +278,28 @@ ELSE (max rounds reached):
 Cumulative target-met count: 2 → TERMINATION CONDITION MET
 ```
 
+**Multi-target tracker (Scene D):**
+
+```
+## Multi-Target Global Tracker
+| Round | Molecule SMILES | T1 Score | T2 Score | T1 Met? | T2 Met? | ALL Met? |
+|-------|----------------|----------|----------|---------|---------|---------|
+| 1 | [SMILES_1] | −7.5 | −6.8 | No | No | No |
+| 2 | [SMILES_2] | −8.7 | −7.2 | ✅ | No | No |
+| 3 | [SMILES_3] | −8.9 | −8.6 | ✅ | ✅ | ✅ Yes |
+
+Cumulative ALL-Met count: 1 → [check against task threshold]
+```
+
 **Update this tracker after EACH round.** Check the cumulative count against the task's termination condition before proceeding to the next round. The tracker is maintained incrementally — do not reconstruct it from scratch at the end.
 
 ### Docking Parameter Locking (for iterative docking tasks)
 
 **When the task requires that docking parameters remain constant across all rounds:**
 
-After the baseline docking (Round 0 or Step 1 in Round 1), record the exact parameters in `run_log.md` as "Locked Docking Parameters." In ALL subsequent rounds, retrieve and reuse these exact parameters:
+After the baseline docking (Round 0 or Step 1 in Round 1), record the exact parameters in `run_log.md` as "Locked Docking Parameters." In ALL subsequent rounds, retrieve and reuse these exact parameters.
+
+**Single-target tasks (Scene A/B/C):**
 
 ```
 ## Locked Docking Parameters (established in baseline docking)
@@ -258,9 +309,38 @@ After the baseline docking (Round 0 or Step 1 in Round 1), record the exact para
 - Rule: Reuse these in EVERY subsequent round. Do NOT re-detect pocket.
 ```
 
+**Multi-target tasks (Scene D):** Record one locked parameter set PER TARGET:
+
+```
+## Locked Docking Parameters
+### Target 1: [name] ([PDB ID])
+- center_x: [val]  center_y: [val]  center_z: [val]
+- size_x: [val]    size_y: [val]    size_z: [val]
+- Source: [co-crystal / fpocket / user]
+### Target 2: [name] ([PDB ID])
+- center_x: [val]  center_y: [val]  center_z: [val]
+- size_x: [val]    size_y: [val]    size_z: [val]
+- Source: [co-crystal / fpocket / user]
+Rule: Reuse EACH target's parameters in EVERY subsequent round.
+```
+
+⚠ Do NOT use Target 1's pocket parameters for Target 2, even if both are kinases. Each target has its own pocket geometry.
+
 **⚠ Do NOT re-run pocket detection in subsequent rounds.** The pocket does not change between rounds — only the ligand changes. Re-running pocket detection risks inconsistency (different pocket center in different rounds), which would make ΔScore comparisons unreliable.
 
 **Maximum iteration rounds:** 5 (default). However, if the task specifies a different limit (e.g., 15 rounds), follow the task's limit. If the best molecule has not improved for 2 consecutive rounds (L3 Principle 7 convergence stop), stop early regardless of round count unless the task prohibits early stopping.
+
+<!-- NEW: Optional LR SAR-informed optimization -->
+### Optional: SAR-Informed Optimization Direction (if LR tools are available)
+
+When optimization stagnates (< 10% improvement in the primary metric over 2 consecutive rounds), literature search can provide new design direction:
+
+1. Search PubMed: `"[target name] SAR structure-activity"` (retmax=10)
+2. Extract key SAR insights: which functional groups improve potency, which cause toxicity, known pharmacophore features
+3. Use insights to inform REINVENT seed selection or SMILES fg-editor modifications in the next round
+4. Record: `[LR-INFORMED DESIGN] SAR literature guided Round N seed selection: [rationale with PMID]`
+
+This is a principled use of Category 3 information to GUIDE computational design choices, not to replace computation. The computational results of the next round remain Category 1. If LR tools are not available, rely on computational analysis of the optimization trajectory to select new design directions.
 
 ## Iteration Record Requirements (L3 Principle 8)
 
@@ -278,6 +358,16 @@ Each round must save:
 | 1 | [mol1] | −7.1 | 0.42 | 4.1 | CYP3A4=0.65 | Replace OMe with F | Improved | round01_docking.pdbqt |
 | 2 | [mol2] | −7.8 | 0.51 | 3.5 | CYP3A4=0.43 | Ester→amide | Improved | round02_docking.pdbqt |
 
+**Multi-target optimization trajectory table (Scene D):**
+
+| Round | SMILES | T1 Dock | T2 Dock | QED | ADMET Flags | Strategy | Bottleneck | Source Files |
+|-------|--------|---------|---------|-----|-------------|----------|------------|-------------|
+| 0 | [seed] | −6.2 | −5.8 | 0.38 | CYP3A4=0.72 | — | T2 | step01_T1.pdbqt, step01_T2.pdbqt |
+| 1 | [mol1] | −6.5 | −7.1 | 0.42 | OK | Improve T2 hinge H-bond | T1 | round01_T1.pdbqt, round01_T2.pdbqt |
+| 2 | [mol2] | −8.1 | −7.8 | 0.51 | OK | Improve T1 hydrophobic | T2 | round02_T1.pdbqt, round02_T2.pdbqt |
+
+The "Bottleneck" column records which target was prioritized in the NEXT round's design strategy — this is the primary evidence of adaptive strategy.
+
 **The "Source Files" column ensures traceability of every reported value.**
 
 ## Common Failures & Recovery
@@ -287,7 +377,7 @@ Each round must save:
 | LLM designs invalid SMILES 3 times in a row | Complex starting molecule; LLM struggles with SMILES syntax | Switch to REINVENT `mol2mol_sampling` with `high_similarity` prior |
 | Docking score improves but ADMET worsens | Optimization inadvertently introduced metabolic liability | Next round explicitly targets ADMET improvement while constraining docking score not to worsen |
 | No improvement after 3 rounds | Molecule may be near local optimum | Try a larger structural change (scaffold hop via Skill 4 Mode B with `scaffold_generic`); or declare Pareto frontier reached |
-| ProLIF residue IDs don't match task description | Numbering scheme mismatch | Execute residue mapping (L3 Principle 17) before re-interpreting interactions |
+| Interaction residue IDs don't match task description | Numbering scheme mismatch (wrong `--resid_offset` or unmapped ProLIF output) | Recompute offset via `residue_mapper.py`; re-run interaction-visualizer with correct `--resid_offset` (L3 Principle 17) |
 
 ## Quality Gates (Active Checkpoints)
 
@@ -296,6 +386,7 @@ Each round must save:
 - [ ] Docking score is negative (if positive, progressive box enlargement attempted)
 - [ ] Structure files (docking pose, Boltz-2 CIF) downloaded and verified
 - [ ] Interaction images downloaded
+- [ ] If interaction-visualizer used: summary JSON parsed, partner_site.csv reviewed for modification candidates
 - [ ] If task references specific residues, numbering mapping applied
 
 **CHECKPOINT after Step 2 (design):**
@@ -323,4 +414,5 @@ Each round must save:
 | Docking pose files | PDBQT per round | Skill 6, Skill 8, Archive | **A — MUST download** |
 | Boltz-2 complex CIF | CIF per round | Archive, user verification | **A — MUST download** |
 | Interaction images | PNG per round | Report | **A — MUST download** |
+| Interaction-visualizer CSV + JSON (if used) | CSV, JSON per round | Agent decision loop, SAR analysis | **A — MUST download** |
 | Residue mapping table | CSV (if built) | Report | **A — MUST download** |

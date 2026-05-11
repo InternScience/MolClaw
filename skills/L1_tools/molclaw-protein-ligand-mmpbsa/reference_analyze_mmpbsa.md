@@ -10,8 +10,7 @@ metadata:
 
 ## Usage
 
-
-### 2. Scenario Description
+### 1. Scenario Description
 
 Reads the MM/PBSA workspace from `run_mmpbsa`, auto-detects CSV files, and emits plots/reports so analysts can interpret the binding energy distributions.
 
@@ -29,11 +28,9 @@ Returns:
 - `command` (str): Executed analyzer command line.
 - `files`, `reports` (Dict[str, str | None]): Generated artifact paths (CSV, PNG, MD).
 
-### 3. How to use tool `analyze_mmpbsa`
+### 2. How to use tool `analyze_mmpbsa`
 
 ```python
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-await client.connect()
 response = await client.session.call_tool(
     "analyze_mmpbsa",
     arguments={
@@ -41,7 +38,6 @@ response = await client.session.call_tool(
     },
 )
 result = DrugSDAClient.parse_result(response)
-await client.disconnect()
 ```
 
 #### Example parameter sets

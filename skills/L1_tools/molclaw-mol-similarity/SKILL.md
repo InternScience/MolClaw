@@ -8,6 +8,11 @@ metadata:
 
 # Molecule Similarity Calculation
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 **Scene 1**: Compute the Tanimoto similarities between a target molecule and a list of candidate molecules using Morgan fingerprints. Need to use the tool *calculate_morgan_fingerprint_similarity*.
 
 The description of tool *calculate_morgan_fingerprint_similarity*.
@@ -75,4 +80,3 @@ response = await client.session.call_tool(
 result = client.parse_result(response)
 fragments_info = result["fragments_info"]
 ```
-

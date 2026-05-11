@@ -16,8 +16,8 @@ metadata:
       L3 Principles 4-5 (Iteration),
       L3 Principle 11 (Count-Before-Report — verify every number against source files),
       L3 Principle 14 (Mandatory structure file collection — download all docking poses),
-      L3 Principle 15 (Mandatory image file collection — download ProLIF heatmaps),
-      L3 Principle 17 (Residue numbering reconciliation — map ProLIF residue IDs),
+      L3 Principle 15 (Mandatory image file collection — download interaction analysis images),
+      L3 Principle 17 (Residue numbering reconciliation — use --resid_offset for interaction-visualizer),
       L3 Principle 18 (Docking parameter safeguards — minimum 25 Å box, progressive enlargement)
 ---
 
@@ -46,10 +46,10 @@ metadata:
 
 | Library size | Strategy | Tiers | Rationale |
 |-------------|----------|-------|-----------|
-| **≤ 10 molecules** | Full evaluation | Direct docking + EquiScore + ProLIF for all | Small enough for exhaustive analysis |
+| **≤ 10 molecules** | Full evaluation | Direct docking + EquiScore + interaction analysis for all | Small enough for exhaustive analysis |
 | **11–100 molecules** | Two-tier screening | Tier 1: property pre-filter → Tier 2: dock survivors | Balance efficiency and coverage |
-| **101–500 molecules** | Three-tier screening | Tier 1: property filter → Tier 2: docking → Tier 3: EquiScore + ProLIF for Top 15–20 | Standard virtual screening |
-| **501–2000 molecules** | Four-tier screening | Tier 1: strict property filter → Tier 2: Boltz-2 rapid binding probability → Tier 3: dock Top 100 → Tier 4: EquiScore + ProLIF for Top 15 | Large-scale campaign |
+| **101–500 molecules** | Three-tier screening | Tier 1: property filter → Tier 2: docking → Tier 3: EquiScore + interaction analysis for Top 15–20 | Standard virtual screening |
+| **501–2000 molecules** | Four-tier screening | Tier 1: strict property filter → Tier 2: Boltz-2 rapid binding probability → Tier 3: dock Top 100 → Tier 4: EquiScore + interaction analysis for Top 15 | Large-scale campaign |
 | **> 2000 molecules** | Recommend KarmaDock or stricter pre-filter | Advise user to use KarmaDock for initial screening or provide stricter filtering criteria to reduce the library | QuickVina's per-molecule MCP calls would be too slow |
 
 Record the chosen strategy and rationale in `run_log.md`.
@@ -171,9 +171,23 @@ Call `convert_pdb_to_pdbqt_dock` on `prepared_pdb`. If it fails, re-run `fix_pdb
 
 Download the receptor PDBQT file to local workspace. This is a Category B file (diagnostic/reproducibility value).
 
+<!-- NEW: Optional LR known binder retrieval -->
+### Optional: Known Binder Retrieval (if LR tools are available)
+
+Before docking execution, search for experimentally validated binders of the target to use as positive controls:
+
+1. PubMed search: `"[target name] inhibitor IC50"` or `"[target name] crystal structure ligand"` (retmax=10)
+2. If known binders are found with published binding data:
+   - Retrieve their SMILES via `compound_retrieve` (by compound name) and include them in the docking run alongside the task's candidate molecules.
+   - Their docking scores serve as **internal validation benchmarks** — if a known nanomolar binder docks with a poor score (positive or near zero), the docking setup (box position, receptor conformation) may need troubleshooting.
+   - Record in `run_log.md`: `[LR] Known binder controls: [compound names with PMID]. Purpose: docking validation (Principle 9).`
+3. This directly supports L3 Principle 9 (cross-validation) and Principle 13 Level 4 (proper literature citation).
+
+**If LR tools are not available**, skip this step. Proceed to Phase 5.
+
 ## Phase 5: Docking Execution
 
-**Primary method — QuickVina2.** For each ligand, call `molecule_docking_quickvina`. Collect `docking_affinity_value` (kcal/mol, more negative = better) and `docking_file`.
+**Primary method — QuickVina2.** For each ligand, call `molecule_docking_quickvina_fullprocess`. Collect `docking_affinity_value` (kcal/mol, more negative = better) and `docking_file`.
 
 ### Checkpoint A — Immediate Sanity Check After Each Docking (L3 Principle 12)
 
@@ -181,9 +195,9 @@ After EACH individual docking call, verify:
 
 | Check | Condition | Action on failure |
 |-------|-----------|-------------------|
-| Score sign | `affinity_value` < 0 | If positive → **docking failure**. Do NOT silently accept. Execute progressive box enlargement (see below). |
-| Score magnitude | `affinity_value` > −15.0 for standard drug-like molecules | Flag as "anomalous — possible oversized ligand or box error" |
-| Output file | `docking_res_file` exists and is non-empty | If missing → docking crashed, retry with larger box |
+| Score sign | `docking_affinity_value` < 0 | If positive → **docking failure**. Do NOT silently accept. Execute progressive box enlargement (see below). |
+| Score magnitude | `docking_affinity_value` > −15.0 for standard drug-like molecules | Flag as "anomalous — possible oversized ligand or box error" |
+| Output file | `docking_file` exists and is non-empty | If missing → docking crashed, retry with larger box |
 
 ### Progressive Box Enlargement on Failure (L3 Principle 18)
 
@@ -207,7 +221,7 @@ Log every retry attempt and its outcome in `run_log.md`. If ALL molecules in a b
 # Download docking pose PDBQT for each molecule
 response = await client.session.call_tool(
     "server_file_to_base64",
-    arguments={"file_path": result["docking_res_file"]}
+    arguments={"file_path": result["docking_file"]}
 )
 dl = client.parse_result(response)
 local_path = f"step{N}_mol{i:02d}_docking_pose.pdbqt"
@@ -247,39 +261,41 @@ Record verified counts in `run_log.md`: "Docking: Q molecules attempted → S do
 
 **EquiScore rescoring (for Top candidates, up to 20 molecules).** Call `equiscore_pocket` → `equiscore_screen`. EquiScore scores are higher = better (opposite to Vina). Use rank fusion, not raw score addition.
 
-**Post-EquiScore download:** Download any SDF files generated during EquiScore pocket extraction (`single_sdf_dir`). These are Category A files needed for ProLIF.
+**Post-EquiScore download:** Download any SDF files generated during EquiScore pocket extraction (`single_sdf_dir`). These are Category A files needed for interaction analysis.
 
-**ProLIF interaction analysis (for final candidates, up to 10 molecules).** Call `prolif_docking`. Identify anchor interactions (conserved across top hits) and differentiating interactions.
+**Interaction analysis (for final candidates, up to 10 molecules).** Run `molclaw-interaction-visualizer` on each top candidate's docking pose. For batch fingerprint comparison across all candidates simultaneously, optionally supplement with `prolif_docking`.
 
-### Residue Numbering Mapping for ProLIF (L3 Principle 17 — MANDATORY when task references specific residues)
+```bash
+# Per-candidate deep analysis (PRIMARY — run for each top candidate)
+python molclaw_interaction_visualizer.py \
+    --receptor prepared.pdb --ligand candidate_pose.sdf \
+    --mode ligand --out_dir viz_candidate_N \
+    --resid_offset <offset> --score <vina_score> \
+    --residue_roles_json roles.json --title "Target–Candidate_N"
+```
 
-**MAPPING GATE — Execute BEFORE interpreting ProLIF results if the task references specific residues:**
+Identify anchor interactions (from `summary_*.json` → `top_residues`) and modification candidates (from `*_partner_site.csv`).
+
+### Residue Numbering (L3 Principle 17 — MANDATORY when task references specific residues)
+
+**For interaction-visualizer:** Use `--resid_offset N` (N = UniProt − PDB). All CSV outputs automatically include `rec_resid_mapped` column.
+
+**MAPPING GATE — Execute BEFORE interpreting results if the task references specific residues:**
 
 1. Retrieve the numbering scheme info from Skill 1 output.
-2. If the analysis structure uses a different numbering scheme from the task description:
-   - Build a mapping table using `residue_mapper.py` or manual DBREF/offset calculation.
-   - Save as `stepNN_residue_mapping.csv`.
-3. When reporting ProLIF results, ALWAYS specify the numbering scheme:
-   - CORRECT: "ProLIF detected HBAcceptor at ALA145 (tool internal numbering = Ala719 PDB 1M17 = Ala743 UniProt P00533)"
-   - WRONG: "ProLIF detected HBAcceptor at ALA145" (ambiguous)
-4. When verifying task-specified residues (e.g., "confirm Met793 interaction"), translate to the analysis structure's numbering BEFORE searching ProLIF output.
+2. Compute the offset: `offset = UniProt_number − PDB_number`. Use `residue_mapper.py` if needed.
+3. When reporting results, ALWAYS specify the numbering scheme:
+   - CORRECT: "Interaction visualizer detected HBond at ALA145 (rec_resid_pdb=145, rec_resid_mapped=719 with offset +574 = Ala719 PDB 1M17 = Ala743 UniProt P00533)"
+   - WRONG: "Interaction visualizer detected HBond at ALA145" (ambiguous — which numbering?)
+4. When verifying task-specified residues (e.g., "confirm Met793 interaction"), check the `rec_resid_mapped` column directly.
 
-### Post-ProLIF Image Download (L3 Principle 15 — MANDATORY)
+### Post-Analysis Image Download (L3 Principle 15 — MANDATORY)
 
-Download ALL ProLIF visualization outputs:
-- Interaction heatmap (PNG/SVG)
-- Frequency barplot (PNG/SVG)
-- Any other images in the ProLIF output directory
-
-```python
-# List and download all image files from ProLIF output
-for img_file in prolif_output_images:
-    response = await client.session.call_tool(
-        "server_file_to_base64",
-        arguments={"file_path": img_file}
-    )
-    # ... save locally with step-numbered name
-```
+Download ALL interaction-visualizer output images for each candidate:
+- `diagram2d_*.png` — Schrödinger-style 2D interaction diagram
+- `residue_bar_*.png` — residue stacked bar chart
+- `pymol_*_{front,side,top}.png` — 3D renderings (if PyMOL available)
+- `summary_*.json` — decision-ready JSON
 
 ### Screening Funnel Summary (MANDATORY — all counts file-verified)
 
@@ -313,9 +329,9 @@ If the first round of screening yields no satisfactory candidates (e.g., all doc
 |---------|-------------|----------|
 | All docking scores positive | Wrong pocket; receptor PDBQT corrupt; box too small | Re-detect pocket; re-convert receptor; **try progressive box enlargement 25→30→40→50 Å** |
 | `convert_smiles_to_format` fails for many molecules | Complex stereochemistry or charged species | Try alternative representation; generate 3D with RDKit first |
-| EquiScore and Vina rankings completely disagree | Different binding modes scored; possible incorrect pose | Re-dock top EquiScore hits; inspect poses visually via ProLIF |
+| EquiScore and Vina rankings completely disagree | Different binding modes scored; possible incorrect pose | Re-dock top EquiScore hits; inspect poses visually via interaction-visualizer 2D diagram |
 | Multiple molecules return identical scores (e.g., all 0.0) | Systematic setup error | Check receptor format, box definition, and ligand preparation |
-| ProLIF residue IDs don't match task-specified residues | Numbering scheme mismatch | **Execute residue mapping protocol (L3 Principle 17)** before concluding interaction is absent |
+| Interaction residue IDs don't match task-specified residues | Numbering scheme mismatch (`--resid_offset` wrong or not set) | Recompute offset; check `rec_resid_mapped` column; **execute residue mapping protocol (L3 Principle 17)** before concluding interaction is absent |
 
 ## Quality Gates (Active Checkpoints)
 
@@ -335,9 +351,9 @@ If the first round of screening yields no satisfactory candidates (e.g., all doc
 **CHECKPOINT after Phase 6 (ranking):**
 - [ ] Success/failure counts match actual data
 - [ ] EquiScore and Vina agree on at least 60% of Top 10 molecules
-- [ ] ProLIF shows Top candidates forming reasonable interactions with pocket residues
-- [ ] ProLIF residue IDs mapped to task reference scheme (if task specifies residues)
-- [ ] All ProLIF images downloaded
+- [ ] Interaction-visualizer shows Top candidates forming reasonable interactions with pocket residues
+- [ ] `rec_resid_mapped` verified against task reference scheme (if task specifies residues)
+- [ ] All interaction analysis images downloaded (interaction-visualizer PNGs; ProLIF heatmaps if batch run)
 - [ ] Screening funnel has complete tier-by-tier verified statistics
 - [ ] Structure source annotation from Skill 1 is included in the report
 
@@ -349,6 +365,14 @@ If the first round of screening yields no satisfactory candidates (e.g., all doc
 | Top docking poses | PDBQT files per molecule | Skills 6, 8 | **A — MUST download** |
 | Pocket coordinates | (x, y, z, box_size) | Skills 8, 11 | B — record in log |
 | Screening funnel stats | Markdown table (verified counts) | Report | B — record in log |
-| ProLIF interaction data | Per-molecule interaction list | Skills 5, 8 | **A — MUST download** |
-| ProLIF heatmap images | PNG/SVG | Report | **A — MUST download** |
+| Interaction-visualizer CSV + JSON | Per-molecule interaction data, summary JSON | Skills 5, 8 | **A — MUST download** |
+| Interaction-visualizer images | PNG (diagram2d, residue_bar, pymol) per candidate | Report | **A — MUST download** |
+| ProLIF interaction data (if batch run) | Per-molecule fingerprint CSV | Skills 5, 8 | **A — MUST download** (if used) |
 | Residue mapping table | CSV (if built) | Skills 8, 11 | **A — MUST download** |
+
+### Post-Execution Learning Check
+
+After completing the screening workflow, if the agent encountered any of the following, evaluate crystallization triggers per L3 Principle 25.5:
+- A novel tool composition not standard in this workflow (e.g., combining conformational ensemble with per-conformation docking)
+- A failure-recovery pattern not in the failure table above
+- A parameter configuration that significantly improved hit rates over default settings

@@ -55,6 +55,23 @@ After acquiring the protein structure via any path above:
 
 **For ESMFold/Chai-1 predictions:** The predicted structure file is a Category A (user-critical) output. Download is mandatory — this file is the structural basis for all downstream analysis.
 
+<!-- NEW: Optional LR target context -->
+### Optional: Target Context Retrieval (if LR tools are available)
+
+Before proceeding to structure quality assessment, optionally search PubMed for target background that informs downstream decisions:
+
+1. Search PubMed: `"[protein name] structure function review"` (retmax=5)
+2. Note key findings: known active site residues, co-factors, conformational states, key mutations, known binders
+3. Record findings in `run_log.md` under "Target Context": `[LR] pubmed-search | query: [terms] | key findings: [summary]`
+
+This information does NOT replace computational analysis but informs downstream decisions:
+- Which chain to extract if multi-chain complex
+- Whether apo or holo structure is more appropriate for the task
+- Known allosteric sites that may warrant separate pocket detection
+- Critical residues to verify in interaction analysis
+
+**If LR tools are not available**, skip this step entirely. Proceed to Structure Quality Assessment.
+
 ## Structure Quality Assessment
 
 Before any repair, run a health check to inform repair decisions.
@@ -132,6 +149,25 @@ The repaired PDB is a Category A output — it is the foundation for ALL downstr
 
 **⚠ A repair step is NOT considered complete until the repaired PDB has been downloaded and verified locally.**
 
+### FoldX-Specific Repair (When Downstream Uses FoldX)
+
+If the downstream workflow involves FoldX analysis (Stability, BuildModel, AlaScan, PositionScan, PSSM, AnalyseComplex, or SequenceDetail — see L1 skill `molclaw-foldx-tool`), an additional FoldX-specific repair step is **MANDATORY** after the standard pdbfixer repair:
+
+```python
+response = await client.session.call_tool("foldx_tool", arguments={
+    "mode": "repairpdb",
+    "pdb_path": pdbfixer_output_path
+})
+foldx_repair = client.parse_result(response)
+foldx_repaired_pdb = foldx_repair["output_dir"] + "/" + [
+    k for k in foldx_repair["key_files"] if k.endswith("_Repair.pdb")
+][0]
+```
+
+Download the FoldX-repaired PDB via `server_file_to_base64` — Category A output. This optimizes side-chain rotamers against FoldX's energy function. The `*_Repair.pdb` output is the ONLY acceptable input for subsequent FoldX modes.
+
+**When to skip:** If the downstream workflow does NOT involve FoldX (e.g., only docking, MD simulation, or pocket detection), FoldX RepairPDB is not needed.
+
 ## Common Failures & Recovery
 
 | Failure | Likely cause | Recovery |
@@ -163,5 +199,7 @@ The repaired PDB is a Category A output — it is the foundation for ALL downstr
 | Quality summary | `quality_summary` | Dict: {source_type, avg_plddt_or_bfactor, residue_count, chain_count} | All downstream skills (for reporting) | B — record in log |
 | Sequence (FASTA) | `fasta_path` | FASTA file path | Skills 9, 10 | **A — MUST download** |
 | Numbering scheme info | `numbering_scheme` | Dict: {scheme, offset, input_seq_start} | Skills 2, 6, 8, 9, 10, 11 | B — record in log |
+
+| FoldX-repaired structure | `foldx_repaired_pdb` | PDB file path | FoldX modes in Skills 9, 10 (Scene B/F) | **A — MUST download** (only when FoldX downstream) |
 
 **Critical rule:** Downstream skills MUST use `prepared_pdb`, never the raw input file.

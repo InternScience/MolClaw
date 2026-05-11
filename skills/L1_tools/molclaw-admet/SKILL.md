@@ -8,6 +8,11 @@ metadata:
 
 # ADMET Properties Prediction
 
+Note: 
+- Local files are not directly accessible by the server. Please upload them to the server using `molclaw-file-transfer` before execution. 
+- For PDB file inputs, it is recommended to preprocess them using `molclaw-pdbfixer` before execution.
+- Please refer to skill `molclaw-scp-server` to complete tool invocation.
+
 The description of tool *pred_mol_admet*.
 
 ```tex
@@ -35,15 +40,3 @@ response = await client.session.call_tool(
 result = client.parse_result(response)
 admet_predictions = result["json_content"]
 ```
-
-
----
-
-## ⚠ Computation-First Declaration (L3 Principles 10, 13)
-
-ADMET predictions from `pred_mol_admet` are **Level 1 direct tool computations** — the highest authority for ADMET data. When reporting these values:
-
-- **Label as:** "ADMET-AI predicted CYP3A4 inhibition probability: 0.72 (statistical prediction)" — Category 1 tool-computed fact.
-- **NEVER say:** "This molecule inhibits CYP3A4" — ADMET-AI provides probabilities, not binary facts.
-- **NEVER substitute** with literature IC50/EC50 values unless explicitly comparing computational vs. experimental. If literature values are cited, label them: "⚠️ LITERATURE VALUE: ..."
-- **All probabilities must be in [0, 1].** Values outside this range indicate tool error — re-run, do not accept.

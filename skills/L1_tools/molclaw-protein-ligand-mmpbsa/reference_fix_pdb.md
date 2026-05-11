@@ -10,8 +10,7 @@ metadata:
 
 ## Usage
 
-
-### 2. Scenario Description
+### 1. Scenario Description
 
 Cleans a receptor PDB (adding hydrogens, modeling missing atoms) so that `prepare_complex` can receive a validated `protein` path.
 
@@ -34,11 +33,9 @@ Returns:
 - `output_file` (str | None): Repaired receptor path.
 - `atom_count`, `residue_count`, `chain_count` (int | None): Topology counts when available.
 
-### 3. How to use tool `fix_pdb`
+### 2. How to use tool `fix_pdb`
 
 ```python
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-await client.connect()
 response = await client.session.call_tool(
     "fix_pdb",
     arguments={

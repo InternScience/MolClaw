@@ -29,6 +29,14 @@ metadata:
 
 **Targeted generation without a starting molecule:** If the user wants "molecules that bind EGFR" but provides no starting molecule, first check if known inhibitors exist (search literature/ChEMBL). If found, use Mode B with a known inhibitor as the starting point. If not, use Mode A for de novo generation followed by docking (Skill 2) to filter.
 
+**De novo → multi-target seed selection protocol (when no starting molecule exists and the task targets multiple proteins):**
+1. Generate a large de novo library (n=100–200, `filter_preset="druglike"`)
+2. Dock ALL generated molecules against ALL target proteins (Skill 2), using each target's independently determined pocket parameters
+3. For each molecule, compute the "worst-target score" = max(score_T1, score_T2, ...) — i.e., the least-negative score across targets
+4. Rank by worst-target score (ascending = better worst-case binding)
+5. Select top 3–5 as seed molecules for Skill 5 Scene D iteration
+6. This protocol replaces the user-provided starting molecule in Skill 5's prerequisites for multi-target de novo tasks
+
 ## Prerequisites
 
 No hard dependency. Commonly combined with: Skill 3 (property filtering of generated molecules), Skill 2 (docking validation), Skill 5 (iterative optimization of best candidates).
@@ -38,26 +46,18 @@ No hard dependency. Commonly combined with: Skill 3 (property filtering of gener
 | User input | Recommended mode | Tool |
 |-----------|-----------------|------|
 | No starting molecule, needs a library | **Mode A: De novo** | `reinvent_denovo_sampling` |
-| Has a starting molecule, wants variants | **Mode B: Mol-to-mol** | `reinvent_mol2mol_sampling` (single) or `batch_reinvent_mol2mol_sampling` (multiple seeds) |
+| Has a starting molecule, wants variants | **Mode B: Mol-to-mol** | `reinvent_mol2mol_sampling` (call sequentially for multiple seeds) |
 | Has a core scaffold with marked R-groups `[*:1]` | **Mode C: R-group sampling** | `libinvent_rgroup_sampling_by_scaffold` or `libinvent_rgroup_sampling_by_scaffold_name` (12 predefined scaffolds) |
 | Has two fragment warheads, needs a linker | **Mode D: Linker** | `linkinvent_linker_sampling_by_warheads` or `linkinvent_linker_sampling_by_warhead_pair_name` (9 predefined pairs) |
 | Needs peptide sequences | **Mode E: Peptide** | `pepinvent_peptide_sampling_by_peptide`, `pepinvent_peptide_sampling_by_template` (10 templates), or `get_pepinvent_info` (query options) |
-| Has a starting molecule + explicit property targets (QED, MW, LogP, TPSA ranges) | **Mode F: RL similarity optimization** | `reinvent_similarity_optimization` |
-| Has a scaffold + explicit property targets for R-groups | **Mode G: RL R-group optimization** | `libinvent_rgroup_optimization` |
+| Has a starting molecule + explicit property targets (QED, MW, LogP, TPSA ranges) | **Mode F: Mol-to-mol + property filtering** | `reinvent_mol2mol_sampling` → filter with `calculate_mol_drug_chemistry` and `pred_mol_admet` |
 
-### Mode F & G: RL Optimization vs Sampling — When to Choose
+### Mode F: Property-Targeted Generation via Sampling + Filtering
 
-| Criterion | Use Sampling (Modes A-E) | Use RL Optimization (Modes F-G) |
-|-----------|--------------------------|--------------------------------|
-| Property targets | Vague or none ("generate analogs") | Explicit ranges ("QED > 0.7, LogP 1-3") |
-| Speed requirement | Need results in seconds | Can wait minutes |
-| Diversity goal | Maximum structural diversity | Property-optimized set |
-| Scaffold control | Need scaffold_generic/scaffold priors | Free optimization (Mode F) or scaffold-fixed (Mode G) |
-| Typical use | Library building, exploration | Lead optimization, ADMET improvement |
-
-**Mode F usage pattern (reinvent_similarity_optimization):** Set `similarity_weight` to control how close to the target molecule; set `qed_weight`, `mw_weight`, `logp_weight`, `tpsa_weight` with specific `_low`/`_high` ranges to guide the RL. See L1 skill `molclaw-similarity-optimization` for weight recipes.
-
-**Mode G usage pattern (libinvent_rgroup_optimization):** Requires a `.smi` scaffold file. Supports all Mode F weights PLUS R-group-specific constraints (`rgroup_mw_weight/min/max`, `rgroup_rings_weight/min/max`). See L1 skill `molclaw-rgroup-optimization`.
+When the user has explicit property targets but no RL optimization tool is available, the recommended approach is:
+1. Generate a large set of candidates using `reinvent_mol2mol_sampling` with `n=50-100` and appropriate `prior_type`
+2. Filter candidates using `calculate_mol_drug_chemistry` (QED, Lipinski) and `pred_mol_admet` for property compliance
+3. Rank and select the best candidates meeting all constraints
 
 ### Mode B: `prior_type` Selection Guide
 
@@ -253,11 +253,11 @@ Final report must include an **optimization trajectory table** showing how the b
 |---------|-------------|----------|
 | Very few valid molecules generated (<10% of n) | `filter_preset` too strict; starting molecule too complex | Lower filter to `minimal`; simplify starting molecule; increase n |
 | All generated molecules extremely similar (Tanimoto >0.9) | `min_similarity` too high; `sampling_temp` too low | Lower similarity constraint; try different `prior_type` |
-| No improvement across 2 rounds | Wrong chemical space region; wrong mode | Switch mode (e.g., from mol2mol to R-group); try a different starting molecule; consider switching to RL optimization (Mode F/G) |
+| No improvement across 2 rounds | Wrong chemical space region; wrong mode | Switch mode (e.g., from mol2mol to R-group); try a different starting molecule; increase sampling count and apply stricter filtering |
 | Mode C scaffold parsing fails | SMILES attachment point notation `[*:1]` incorrect | Verify scaffold SMILES; try `libinvent_rgroup_sampling_by_scaffold_name` with a built-in scaffold |
 | Reported count doesn't match file | Memory-based counting instead of file-based | **Re-open the output file, re-count programmatically, correct the report** |
-| Property targets not met after filtering | Sampling generates random molecules, post-filtering is lossy | Switch to Mode F (`reinvent_similarity_optimization`) for property-directed generation |
-| Multiple seeds need derivatives simultaneously | Sequential mol2mol calls are slow | Use `batch_reinvent_mol2mol_sampling` with smiles_list |
+| Property targets not met after filtering | Sampling generates random molecules, post-filtering is lossy | Use Mode F: increase `n` in `reinvent_mol2mol_sampling` (e.g., n=100-200) to get more candidates for filtering |
+| Multiple seeds need derivatives simultaneously | Sequential mol2mol calls are slow | Call `reinvent_mol2mol_sampling` sequentially for each seed molecule |
 | User says a scaffold name (e.g., "pyrimidine") without providing SMILES | User expects predefined scaffold support | Use `libinvent_rgroup_sampling_by_scaffold_name` or `linkinvent_linker_sampling_by_warhead_pair_name` |
 | Need to know available peptide templates | Agent unsure which templates exist | Call `get_pepinvent_info('templates')` before peptide generation |
 

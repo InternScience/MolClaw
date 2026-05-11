@@ -15,7 +15,7 @@ metadata:
       L3 Principle 9 (Independent validation),
       L3 Principle 11 (Count-Before-Report — verify design counts and validation scores),
       L3 Principle 14 (Mandatory structure file collection — download Chai-1 complexes, HDOCK outputs),
-      L3 Principle 15 (Mandatory image file collection — download ProLIF interaction plots),
+      L3 Principle 15 (Mandatory image file collection — download interaction analysis images),
       L3 Principle 17 (Residue numbering reconciliation — map interface residues to task reference)
 ---
 
@@ -42,7 +42,7 @@ metadata:
 
 **Scene B: Known peptide optimization.** Core tools: `proteinmpnn_tool` + `pepinvent_peptide_sampling_by_peptide`.
 
-**Scene C: Protein binder design (> 50 residues).** Core tools: `chroma_toolkit` → `proteinmpnn_tool`.
+**Scene C: Protein binder design (> 50 residues).** Core tools: Chroma (`chroma_monomer` / `chroma_complex` / `chroma_symmetry`) → `proteinmpnn_tool`. See L1 skill `molclaw-chroma-toolkit` for which Chroma tool to use.
 
 ## Residue Numbering Pre-Check (L3 Principle 17 — Execute Before Any Design)
 
@@ -53,10 +53,24 @@ metadata:
 ### Step 1: Prepare Target FASTA
 Extract the target protein sequence from Skill 1 output. Write to a FASTA file.
 
+<!-- NEW: Optional LR known binding motif retrieval -->
+### Optional: Known Binding Motif Retrieval (if LR tools are available)
+
+Before defining the binding region, search for experimentally characterized protein-protein interactions at the target interface:
+
+1. PubMed search: `"[target name] protein-protein interaction interface peptide"` (retmax=10)
+2. Note: known hotspot residues, binding motifs, solved co-crystal structures with peptide ligands
+3. If known peptide binders exist, retrieve their sequences for comparison with designed peptides after Step 4
+4. Key findings inform `target_residues` selection in Step 2 — literature-reported interface hotspots can supplement or validate computational pocket/hotspot predictions
+5. Record in `run_log.md`: `[LR] Known PPI motifs for [target]: [summary with PMID]`
+
+**If LR tools are not available**, skip this step. Rely on computational methods (FoldX, fpocket, MMPBSA decomposition) for binding region definition.
+
 ### Step 2: Define Binding Region
 `target_residues` defines where the peptide should bind. Sources (in priority order):
 - User-specified residue range (highest priority) — **translate to structure numbering if needed**
 - PPI interface hotspot residues (from Skill 6 per-residue decomposition)
+- FoldX AlaScan interface hotspot residues: run `foldx_tool mode=alascan` with `chains` on a known complex structure → select residues with ΔΔG(Ala) > 1.0 kcal/mol as target_residues (faster than MMPBSA, minutes vs hours)
 - fpocket/P2Rank pocket residue list
 - `"all"` — search the full surface (slower)
 
@@ -84,7 +98,7 @@ EvoBind output verification:
 ## Scene C: Protein Binder Design (Full Sub-Workflow)
 
 ### Step C1: Generate Binder Scaffold with Chroma
-Call `chroma_toolkit` to generate protein backbones. `num_samples`: 5–10 scaffolds.
+Call the appropriate Chroma tool (`chroma_complex` for binder design with target context, or `chroma_monomer` for standalone backbone generation) to generate protein backbones. `num_samples`: 5–10 scaffolds. See L1 skill `molclaw-chroma-toolkit` for parameter details.
 
 **Post-generation download (L3 Principle 14):** Download ALL generated scaffold PDB files.
 
@@ -126,7 +140,7 @@ response = await client.session.call_tool(
 )
 # Save as stepNN_chai1_complex.pdb/cif
 ```
-**This is a Category A file — essential for downstream ProLIF analysis, user verification, and visualization.**
+**This is a Category A file — essential for downstream interaction analysis, user verification, and visualization.**
 
 ### Validation Layer 2: HDOCK Docking Verification
 
@@ -145,21 +159,54 @@ response = await client.session.call_tool(
 # Save as stepNN_hdock_complex.pdb
 ```
 
-### Validation Layer 3: ProLIF Interface Interaction Analysis
+### Validation Layer 3: Interface Interaction Analysis (interaction-visualizer — PRIMARY)
 
-Call `prolif_pdb` on the validated complex structure (Chai-1 or HDOCK output).
+Run `molclaw-interaction-visualizer` in peptide mode on the validated complex structure (Chai-1 or HDOCK output):
 
-**Residue Numbering Mapping for ProLIF (L3 Principle 17):**
-Before interpreting ProLIF results, map residue IDs from the complex structure's numbering to the task's reference scheme. The Chai-1 predicted complex uses sequential numbering starting from 1 — this is NOT UniProt numbering.
+```bash
+python molclaw_interaction_visualizer.py \
+    --complex chai1_complex.pdb --mode peptide \
+    --partner_chain B --out_dir viz_out \
+    --resid_offset <offset> --title "PeptideBinder-Target"
+```
 
-**ProLIF Evaluation:**
-- Target: 3–8 interface hydrogen bonds for a good peptide binder
-- Check: peptide contacts the originally specified `target_residues` (using mapped numbering)
-- Identify anchor interactions to preserve in optimization
+**Residue Numbering (L3 Principle 17):**
+Use `--resid_offset N` so all CSV outputs include mapped residue numbers. The Chai-1 predicted complex uses sequential numbering starting from 1 — this is NOT UniProt numbering. Compute the offset before invoking.
 
-### Mandatory ProLIF Image Download (L3 Principle 15)
+**Evaluation criteria:**
+- Target: 3–8 interface hydrogen bonds for a good peptide binder (check `interaction_type_counts.HBond` in `summary_*.json`)
+- Check: peptide contacts the originally specified `target_residues` (verify in `rec_resid_mapped` column)
+- Identify anchor interactions to preserve in optimization (from `top_residues` in summary JSON)
 
-Download ALL ProLIF visualization outputs (interaction heatmap, frequency barplot).
+**Outputs:** `interface_heatmap_*.png` (interface quality assessment), `interface_network_*.png` (interface topology), `residue_bar_*.png`, `summary_*.json` → `top_residues` to identify anchor residues for Round 2 ProteinMPNN fixation.
+
+**Fallback: ProLIF** (only if interaction-visualizer script is unavailable on compute node): Call `prolif_pdb` on the complex. Note that ProLIF requires MCP server and does not produce interface heatmap or network visualizations for single structures.
+
+### Mandatory Interaction Image Download (L3 Principle 15)
+
+Download ALL interaction-visualizer output images:
+- `interface_heatmap_*.png`, `interface_network_*.png`, `residue_bar_*.png` (all PNG)
+- `summary_*.json` — decision-ready JSON
+- If ProLIF was also used: interaction heatmap, frequency barplot
+
+### Validation Layer 3B: FoldX Interface Energy (Optional, Recommended)
+
+For quantitative energy assessment of the designed peptide–target interface:
+
+1. Run FoldX RepairPDB on the Chai-1 predicted complex.
+2. Run FoldX AnalyseComplex:
+
+```python
+response = await client.session.call_tool("foldx_tool", arguments={
+    "mode": "analysecomplex",
+    "pdb_path": foldx_repaired_chai1_complex,
+    "chains": "A,B"   # target_chain, peptide_chain — check actual IDs
+})
+result = client.parse_result(response)
+interaction_energy = result["metrics"]["interaction_energy"]
+```
+
+Interpretation: interaction_energy < −5 kcal/mol suggests a stable interface. Compare across candidates for ranking. This provides physics-based evidence independent of Chai-1 ipTM.
 
 ### Validation Layer 4: Sequence Property Assessment
 
@@ -188,11 +235,12 @@ Label these as "qualitative assessment based on sequence features (agent analysi
 - **Download all Chai-1 complex structures.**
 
 **Round 2 (Focused optimization):** For best Round 1 candidate(s):
-- ProteinMPNN sequence optimization: fix key interface residues (identified by ProLIF in Round 1, with mapped numbering)
+- ProteinMPNN sequence optimization: fix key interface residues (identified by interaction-visualizer in Round 1, from `top_residues` in summary JSON)
+- **Alternative: FoldX PSSM for energy-guided affinity maturation.** Run `foldx_tool mode=pssm` on the Chai-1 predicted complex with `positions` set to peptide interface residues and `chains` set to the target/peptide chain partition. The PSSM matrix directly shows which amino acid substitution at each interface position gives the most favorable ΔΔG_interaction. Combine top substitutions and re-validate with Chai-1.
 - Try `cyclic=True` if Round 1 used linear
 - **⚠ Verify design count. Download structures.**
 
-**Round 3 (Fine-tuning):** Adjust peptide length; refine target_residues based on Round 2 ProLIF data (mapped); try `use_soluble=True` + `omit_aas="CMX"`.
+**Round 3 (Fine-tuning):** Adjust peptide length; refine target_residues based on Round 2 interaction-visualizer data (mapped via `rec_resid_mapped`); try `use_soluble=True` + `omit_aas="CMX"`.
 - **⚠ Verify counts. Download structures and images.**
 
 **Convergence:** Stop when Chai-1 ipTM > 0.7 for at least one candidate; or when ipTM has not improved for 2 rounds; or after 4 rounds maximum.
@@ -217,7 +265,7 @@ Before writing any round summary:
 | All EvoBind designs ipTM < 0.5 | Challenging target surface | Increase length to 15–20; try cyclic; try different target_residues |
 | Chai-1 places peptide at wrong site | Sequence ambiguous about location | Redesign with more iterations |
 | HDOCK gives very weak scores | Peptide doesn't fold alone | Expected; rely more on Chai-1 ipTM |
-| ProLIF residue IDs don't match task | Numbering mismatch | **Execute residue mapping before interpreting** |
+| Interaction residue IDs don't match task | Numbering mismatch (`--resid_offset` wrong) | **Recompute offset; check `rec_resid_mapped` column** |
 
 ## Quality Gates (Active Checkpoints)
 
@@ -228,8 +276,8 @@ Before writing any round summary:
 **CHECKPOINT after each validation layer:**
 - [ ] Chai-1 complex structure downloaded and verified
 - [ ] HDOCK complex structure downloaded and verified
-- [ ] ProLIF images downloaded
-- [ ] Residue numbering mapping applied for ProLIF interpretation
+- [ ] Interaction analysis images downloaded (interaction-visualizer primary; ProLIF if also used)
+- [ ] Residue numbering mapping applied for interaction analysis interpretation
 
 **CHECKPOINT before final report:**
 - [ ] All structure files accounted for in file inventory
@@ -241,9 +289,9 @@ Before writing any round summary:
 
 | Output | Format | Consumed by | Download Policy |
 |--------|--------|-------------|-----------------|
-| Top candidates | CSV: sequence, ipTM, Chai1_ipTM, HDOCK_score, ProLIF_summary | Report | **A — MUST download** |
+| Top candidates | CSV: sequence, ipTM, Chai1_ipTM, HDOCK_score, interaction_summary | Report | **A — MUST download** |
 | Chai-1 complex structures | PDB/CIF per candidate | Skill 6, user verification | **A — MUST download** |
 | HDOCK complex structures | PDB per candidate | User verification | **A — MUST download** |
-| ProLIF images | PNG/SVG | Report | **A — MUST download** |
+| Interaction-visualizer images (primary) / ProLIF images (if used) | PNG/SVG | Report | **A — MUST download** |
 | Iteration trajectory | Table: round, strategy, best_ipTM, verified counts | Report | B — record in log |
 | Residue mapping table | CSV | Report | **A — MUST download** |

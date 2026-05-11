@@ -10,8 +10,7 @@ metadata:
 
 ## Usage
 
-
-### 2. Scenario Description
+### 1. Scenario Description
 
 Run `gmx_MMPBSA_propro` inside the prepared protein-only MD directory to compute GB, PB, or both binding energies.
 
@@ -36,11 +35,9 @@ Return:
 - `output_files` (dict): Key output paths (index files, `gb_result_csv`, `pb_result_csv`).
 - `metrics` (dict): Parsed binding energy metrics (e.g., DELTA G values).
 
-### 3. How to use tool `gmx_mmpbsa_propro`
+### 2. How to use tool `gmx_mmpbsa_propro`
 
 ```python
-client = DrugSDAClient("http://180.184.86.2:32208/mcp")
-await client.connect()
 response = await client.session.call_tool(
     "gmx_mmpbsa_propro",
     arguments={
@@ -52,7 +49,6 @@ response = await client.session.call_tool(
     },
 )
 result = DrugSDAClient.parse_result(response)
-await client.disconnect()
 ```
 
 #### Example parameter sets
