@@ -86,13 +86,5 @@
         "task": "mol_opt_physchem",
         "subtask": "logp",
         "meta": "{\"src_iupac\": \"4-tert-butyl-N-[7-chloro-2-[(1-oxidopyridin-1-ium-3-yl)methyl]-1,3-dioxoisoindol-4-yl]benzenesulfonamide\", \"type\": \"large\"}"
-    },
-    {
-        "id": "83e29f57-3bd8-4790-b1e7-10a1fd55ec2a",
-        "query": "You are a chemical assistent, Optimize the Source Molecule to improve the LogP value while following a structured intermediate optimization process. LogP is a measure of a molecule's lipophilicity, which is its tendency to dissolve in a lipid (fatty) environment compared to water. \nYour response must be directly parsable JSON format:\n{\n    \"Final Target Molecule\": \"SMILES\",\n}\n\nSource Molecule: O=C(CN1CCCCCC1)N1c2ccccc2Sc2ccccc21.",
-        "gt": "",
-        "task": "mol_opt_physchem",
-        "subtask": "logp",
-        "meta": "{\"src_iupac\": \"2-(azepan-1-yl)-1-phenothiazin-10-ylethanone\", \"type\": \"small\"}"
     }
 ]

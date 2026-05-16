@@ -1,13 +1,13 @@
 {
     "seed": 42,
     "samples_per_task": 40,
-    "total_samples": 120,
+    "total_samples": 119,
     "source_root": "/root/lwj/wll/code/DrugAgentTools/shy_local/bench/ChemCoTBench/chemcotbench",
     "counts": {
         "mol_edit/add.json": 10,
         "mol_edit/delete.json": 9,
         "mol_edit/sub.json": 21,
-        "mol_opt_physchem/logp.json": 12,
+        "mol_opt_physchem/logp.json": 11,
         "mol_opt_physchem/qed.json": 20,
         "mol_opt_physchem/solubility.json": 8,
         "mol_opt_target/drd.json": 11,
