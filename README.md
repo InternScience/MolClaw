@@ -58,6 +58,9 @@ This open-source release combines a benchmark suite, a hierarchical skill librar
 - **`skills/L1_tools`**: tool-level operation skills (atomic actions, interface conventions, output checks).
 - **`skills/L2_workflows`**: multi-step workflow skills (task decomposition, step ordering, failure recovery).
 - **`skills/L3_methodology`**: high-level scientific methodology and governance principles.
+- **`skills/LR_research`**: literature review and research-related skills.
+- **`skills/auto-generated-skills`**: skills automatically generated during agent execution.
+- **`skills/system_prompt`**: system prompts defining the agent's core behavior.
 
 This hierarchy is built to be **modular, composable, and auditable**, so complex workflows remain maintainable as tasks, tools, and model backbones evolve.
 
@@ -145,10 +148,10 @@ If you use MolClaw in your research or projects, please consider citing our pape
 ```bibtex
 @article{zhang2026molclaw,
   title={MolClaw: An Autonomous Agent with Hierarchical Skills for Drug Molecule Evaluation, Screening, and Optimization},
-  author={Zhang, Lisheng and Wang, Lilong and Sun, Xiangyu and Tang, Wei and Su, Haoyang and Qian, Yuehui and Yang, Qikui and Li, Qingsong and Tang, Zhenyu and Sun, Haoran and Han, Yingnan and Jiang, Yankai and Lou, Wenjie and Zhou, Bowen and Wang, Xiaosong and Bai, Lei and Xie, Zhengwei},
-  journal={bioRxiv},
-  year={2026},
-  url={https://www.biorxiv.org/content/10.64898/2026.04.03.716272v1}
+  author={Zhang, Lisheng and Wang, Lilong and Sun, Xiangyu and Tang, Wei and Su, Haoyang and Qian, Yuehui and Yang, Qikui and Li, Qingsong and Tang, Zhenyu and Sun, Haoran and others},
+  journal={arXiv preprint arXiv:2604.21937},
+  year={2026}
+}
 }
 ```
 ---
