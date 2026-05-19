@@ -4,8 +4,8 @@
 
 <div align="center">
 
-[![arXiv](https://img.shields.io/badge/arXiv-2604.21937-red?style=flat-square)](https://arxiv.org/abs/2604.21937)
 <!-- [![bioRxiv](https://img.shields.io/badge/bioRxiv-10.64898%2F2026.04.03.716272v1-b31b1b?style=flat-square)](https://www.biorxiv.org/content/10.64898/2026.04.03.716272v1) -->
+[![arXiv](https://img.shields.io/badge/arXiv-2604.21937-red?style=flat-square)](https://arxiv.org/abs/2604.21937)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](./LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?style=flat-square)](https://www.python.org/downloads/)
 
